@@ -1,0 +1,377 @@
+==============================
+9999-99-99 99:99:99 (untagged)
+==============================
+
+  2005-09-15 07:19:21 (r55) by rcaputo
+  examples/self-requesting-stage.perl M; lib/POE/Request/Upward.pm M;
+  lib/POE/Request/Recall.pm M; examples/log-resolver.perl M;
+  lib/POE/Watcher/Delay.pm M; examples/udp-peer.perl M;
+  lib/POE/Watcher/Input.pm M; examples/many-responses.perl M;
+  lib/POE/Stage/TiedAttributes.pm M; lib/POE/Stage.pm M;
+  lib/POE/Stage/Resolver.pm M; lib/POE/Request/Return.pm M;
+  lib/POE/Stage/Receiver.pm M; lib/POE/Stage/Echoer.pm M;
+  examples/ping-pong.perl M; lib/POE/Stage/Ticker.pm M;
+  lib/POE/Request/Emit.pm M; t/01_all_call_types.t M; lib/POE/Request.pm
+  M
+
+    I decided to live by committee regarding the syntax for internal vs.
+    external parameters. The vote was overwhelmingly in favor of an
+    args=>{} parameter rather than special syntax to set pass-through
+    arguments apart from others. This commit makes that change, closing
+    ticket:12. 
+
+  2005-09-15 01:41:34 (r54) by rcaputo
+  lib/POE/Request/Recall.pm M; lib/POE/Request/Upward.pm M;
+  lib/POE/Watcher/Delay.pm M; lib/POE/Watcher/Input.pm M;
+  lib/POE/Watcher.pm M; lib/POE/Stage/TiedAttributes.pm M;
+  lib/POE/Stage.pm M; lib/POE/Request/TiedAttributes.pm M;
+  lib/POE/Stage/Resolver.pm M; lib/POE/Stage/Ticker.pm M;
+  lib/POE/Request/Emit.pm M; lib/POE/Request/Return.pm M;
+  lib/POE/Stage/Receiver.pm M; lib/POE/Request.pm M;
+  lib/POE/Stage/Echoer.pm M
+
+    Heavily revise the documentation, but it is not proofread. 
+
+  2005-09-11 06:31:51 (r53) by rcaputo; lib/POE/Stage.pm M
+
+    Rewrite Stage.pm's documentation. 
+
+  2005-07-25 17:33:13 (r52) by rcaputo; TODO D
+
+    Remove TODO. The todo list has been moved into POE::Stage's trac
+    project. 
+
+  2005-07-17 06:23:27 (r51) by rcaputo; examples/log-resolver.perl M
+
+    Fix the comments. The leaks mentioned have been fixed. 
+
+  2005-07-16 01:42:04 (r50) by rcaputo; TODO M
+
+    Document the classes that stand between POE::Stage::Resolver and
+    POE::Stage::ClientHttp. 
+
+  2005-07-15 14:58:40 (r49) by rcaputo
+  examples/self-requesting-stage.perl M; examples/log-resolver.perl M;
+  TODO M; lib/POE/Stage/Resolver.pm M; lib/POE/Request.pm M
+
+    Find and break a circular reference during $request->cancel(), which
+    means it's also broken during return(). 
+
+  2005-07-15 07:22:59 (r48) by rcaputo
+  examples/log-resolver.perl M; lib/POE/Stage/Resolver.pm M
+
+    Updated POE::Stage::Resolver to actually do something with
+    Net::DNS::Resolver. Also modernized its interface to self-request
+    from init(). Updated log-resolver.perl to reflect the new usage, and
+    added some addresses to resolve against the Internet. 
+
+  2005-07-15 07:21:35 (r47) by rcaputo
+  examples/self-requesting-stage.perl A
+
+    Add a test case for self-requesting stages. It was important to make
+    sure they didn't leak. In fact, they did leak, but this test case
+    illustrates rules to work around that. Later on those rules should be
+    subsumed into POE::Stage. Also, it should be possible to create a
+    POE::Stage::AutoRequest or something that assimilates the
+    self-request pattern. 
+
+  2005-07-15 07:20:09 (r46) by rcaputo
+  lib/POE/Stage.pm M; lib/POE/Request.pm M
+
+    Enable stage init() functions to fire off requests on behalf of the
+    stages creating new stages. This is used in the upcoming
+    POE::Stage::Resolver to greatly simplify its public interface. 
+
+  2005-07-15 02:58:10 (r45) by rcaputo; lab/local-scoped-state.perl A
+
+    Test whether local() affects exported variables. The answer seems to
+    be no, it doesn't. Maybe wrapping the local() in the proper package
+    will work? 
+
+  2005-07-14 04:10:32 (r44) by rcaputo; PATTERNS M
+
+    Discuss stage use patterns in more (or at least fresher) detail.
+    Recommend that stages be use-pattern agnostic if at all possible. It
+    remains to be seen whether they can achieve this in practice. I
+    really hope so. 
+
+  2005-07-14 03:58:29 (r43) by rcaputo; TODO M
+
+    Document my progress. Module documentation is done. Resolver stage is
+    prototyped, but it's not complete. 
+
+  2005-07-14 02:26:06 (r42) by rcaputo
+  lib/POE/Request.pm M; t/01_all_call_types.t M
+
+    Change the format of stringified request objects. Also add tests to
+    separately verify nummified and stringified requests. 
+
+  2005-07-13 18:01:04 (r41) by rcaputo
+  lib/POE/Watcher/Delay.pm M; lib/POE/Watcher/Input.pm M;
+  lib/POE/Stage.pm M; lib/POE/Stage/Resolver.pm M;
+  lib/POE/Stage/Ticker.pm M; lib/POE/Stage/Receiver.pm M;
+  lib/POE/Request.pm M; lib/POE/Stage/Echoer.pm M
+
+    Commit early drafts of all the other documentation. Now every module
+    has something readable! 
+
+  2005-07-13 08:14:34 (r40) by rcaputo
+  lib/POE/Request/Recall.pm M; lib/POE/Request/Upward.pm M;
+  lib/POE/Watcher/Delay.pm M; lib/POE/Watcher.pm M;
+  lib/POE/Stage/TiedAttributes.pm M; lib/POE/Request/TiedAttributes.pm M;
+  lib/POE/Request/Emit.pm M; lib/POE/Request/Return.pm M;
+  lib/POE/Request.pm M
+
+    First draft of several documents. Six more .pm files to go, but not
+    tonight. 
+
+  2005-07-13 03:29:11 (r39) by rcaputo; TODO M
+
+    Fixed per-request data sequestering. Make a note of it in the TODO.
+    Also note xantus' bug report. 
+
+  2005-07-12 23:38:42 (r38) by rcaputo
+  README A; MANIFEST A; Makefile.PL A
+
+    Add the bits that make this a CPAN distribution, although it needs a
+    final name before it can be uploaded. 
+
+  2005-07-12 23:28:52 (r37) by rcaputo; lib/POE/Stage.pm M
+
+    Add a $VERSION for MakeMaker and CPAN. 
+
+  2005-07-12 23:28:13 (r36) by rcaputo; t/01_all_call_types.t M
+
+    Remove the diag() messages. They don't really help here. 
+
+  2005-07-12 23:22:01 (r35) by rcaputo
+  lib/POE/Request R; lib/POE/Watcher.pm R; tests D; POE D; lib A;
+  lib/POE/Watcher R; lib/POE/Stage.pm R; lib/POE A; lib/POE/Request.pm R;
+  lib/POE/Stage R
+
+    Move lib to POE. 
+
+  2005-07-12 23:18:36 (r34) by rcaputo; POE/Stage/TiedAttributes.pm M
+
+    Explain why most of POE::Stage's methods are in the tied attributes
+    class instead. 
+
+  2005-07-12 23:17:39 (r33) by rcaputo
+  examples/all-call-types.perl D; t/01_all_call_types.t A
+
+    Move the all-call-types test over to the tests directory. 
+
+  2005-07-12 23:16:56 (r32) by rcaputo; t A
+
+    Ok, now it's moved. 
+
+  2005-07-12 23:16:39 (r31) by rcaputo; tests A
+
+    Adding a tests directory. Unfortunately, now I need to rename it to
+    "t". 
+
+  2005-07-12 21:24:35 (r30) by rcaputo
+  POE/Stage/TiedAttributes.pm M; POE/Request/TiedAttributes.pm M;
+  POE/Request.pm M; POE/Request/Recall.pm M; POE/Request/Upward.pm M
+
+    This commit perpetrates a most vile act against POE::Stage as a
+    project in order to provide per-Stage contexts for each request.
+    Prior to this change, a request object acted like shared memory
+    between its creator and its target. Now each end of the transaction
+    has its own per-transaction data space. POE::Stage's first test
+    program finally cleanly passes. 
+
+  2005-07-11 06:46:59 (r29) by rcaputo
+  lab/stringified-objects.perl A; examples/log-resolver.perl A;
+  examples/udp-peer.perl M; POE/Request/TiedAttributes.pm M;
+  examples/all-call-types.perl M; POE/Stage/Resolver.pm A;
+  examples/many-responses.perl M; lab/lvalue-test.perl M;
+  POE/Request/Emit.pm M; POE/Request/Return.pm M; POE/Request.pm M;
+  POE/Request/Recall.pm M; POE/Request/Upward.pm M
+
+    Clean up most of the context problems that have plagued POE::Stage
+    while switching to the new POE::Request based contexts. 
+
+  2005-07-11 06:44:49 (r28) by rcaputo; examples/all-call-types.perl A
+
+    Test the contexts and special "req" and "rsp" data members for
+    expectations. This makes debugging this stuff SOOOO much easier. I
+    should have done it HOURS ago! 
+
+  2005-07-10 20:17:35 (r27) by rcaputo; POE/Request/Upward.pm M
+
+    The array deletes were resetting data members to undef, which is
+    against protocol in this application. The values should be 0 to avoid
+    undefined-value warnings yet retain falsity. This replaces delete()
+    with splice(). 
+
+  2005-07-10 18:07:12 (r26) by rcaputo
+  POE/Stage/TiedAttributes.pm M; examples/ping-pong.perl M;
+  examples/udp-peer.perl M; POE/Request/TiedAttributes.pm A;
+  POE/Stage/Ticker.pm M; examples/many-responses.perl M;
+  POE/Request/Emit.pm M; POE/Request/Return.pm M; POE/Stage/Receiver.pm
+  M; POE/Request.pm M; POE/Request/Recall.pm M; POE/Request/Upward.pm M
+
+    Replace the $stage->{req_foo} and $stage->{rsp_foo} syntax with
+    $stage->{req}{foo} and $stage->{rsp}{foo}. This MAY let us also say
+    $stage->{other_request}{foo}, but I won't know for sure until an
+    example program tries it. 
+
+  2005-07-10 18:05:51 (r25) by rcaputo
+  lab A; lab/lvalue-test.perl A; lab/tied-attributes-test.perl A
+
+    Create a place for experiments and proofs of concepts. Move some of
+    those programs into that place. 
+
+  2005-06-22 04:24:08 (r24) by rcaputo
+  POE/Stage/TiedAttributes.pm M; examples/udp-peer.perl M; PATTERNS M;
+  POE/Stage.pm M; examples/many-responses.perl M; TODO M;
+  POE/Request/Return.pm M; POE/Stage/Receiver.pm M; POE/Stage/Echoer.pm
+  M; examples/ping-pong.perl M; POE/Stage/Ticker.pm M;
+  POE/Request/Emit.pm M; POE/Request.pm M; NOTES M; POE/Request/Recall.pm
+  M; POE/Request/Upward.pm M; POE/Watcher/Delay.pm M;
+  POE/Watcher/Input.pm M; POE/Watcher.pm M
+
+    Add the svn:keywords property to all these files. 
+
+  2005-06-14 19:45:08 (r23) by rcaputo; PATTERNS M
+
+    Ramble a little more about response contexts, their side effects, and
+    perceived problems implementing them. 
+
+  2005-06-14 05:14:15 (r22) by rcaputo; PATTERNS M
+
+    I'm getting a little closer to resolving the sub-request scoping
+    issues. Here are my latest notes on the subject. 
+
+  2005-06-14 03:25:02 (r21) by rcaputo
+  POE/Stage/TiedAttributes.pm M; TODO M; POE/Request.pm M
+
+    Add stubs for /^rsp_/ POE::Stage data members. 
+
+  2005-06-13 21:08:57 (r20) by rcaputo
+  POE/Stage/TiedAttributes.pm M; examples/ping-pong.perl M;
+  examples/udp-peer.perl M; POE/Stage.pm M; POE/Stage/Ticker.pm M;
+  examples/many-responses.perl M; POE/Request/Emit.pm M;
+  POE/Request/Return.pm M; POE/Stage/Receiver.pm M; POE/Request.pm M;
+  POE/Stage/Echoer.pm M; POE/Request/Recall.pm M; POE/Request/Upward.pm M
+
+    Replace the internal hash reference implementation of most objects
+    (except the stages) with list references. It's faster, but more
+    importantly it's immune to typos and easier to read: $self->[REQ_FOO]
+    is obviously a request member access. $self->{foo} is therefore a
+    stage member access.
+    
+    In the Stage classes, replace _req and _rsp with req and rsp. Also
+    replace the _foo members with req_foo. rsp_foo will be added shortly. 
+
+  2005-06-12 01:50:25 (r19) by rcaputo; PATTERNS M
+
+    Document some new ideas for handling responses from sub-requests. 
+
+  2005-06-06 07:01:35 (r18) by rcaputo; PATTERNS M
+
+    Ramble on a bit about new scopes for POE::Stage objects. Specifically
+    ways to match up responses to requests and their bookkeeping data. 
+
+  2005-06-05 07:04:31 (r17) by rcaputo; PATTERNS M
+
+    Document more ideas about matching responses to their originating
+    requests. 
+
+  2005-06-04 18:23:31 (r16) by rcaputo
+  POE/Request/Emit.pm M; POE/Request/Return.pm M; TODO M; POE/Request.pm
+  M; POE/Request/Recall.pm M; POE/Request/Upward.pm A;
+  POE/Watcher/Delay.pm M; POE/Watcher/Input.pm M
+
+    A round of refactoring. POE::Request::{Emit,Return} have been
+    abstracted into a base class, POE::Request::Upward and some small
+    tweaks. POE::Request's _recall() method was moved to
+    POE::Request::Emit's recall() method since that's the only place it's
+    used. Saves a pointless method call. Cleaned up POE::Watcher::Delay
+    and ::Input a very little. Updated TODO with the current state of the
+    project. 
+
+  2005-06-04 06:04:38 (r15) by rcaputo; TODO M
+
+    Map out where to go from here. 
+
+  2005-06-03 18:25:14 (r14) by rcaputo; TODO M
+
+    Created an input watcher. 
+
+  2005-06-03 18:22:33 (r13) by rcaputo
+  POE/Request/Returned.pm D; POE/Request/Return.pm A
+
+    Renamed Returned.pm to follow the message naming conventions. 
+
+  2005-06-03 18:22:06 (r12) by rcaputo
+  POE/Stage/TiedAttributes.pm M; examples/ping-pong.perl M;
+  POE/Request/Returned.pm M; PATTERNS M; examples/udp-peer.perl A;
+  POE/Stage.pm M; POE/Request/Response.pm D; POE/Request/Emit.pm A;
+  POE/Stage/Receiver.pm A; POE/Request.pm M; POE/Request/Recall.pm A;
+  POE/Watcher/Delay.pm M; POE/Watcher/Input.pm A
+
+    MAJOR overhaul of the message-passing between stages. Created
+    recall() and emit(). Spent a lot of time tweaking the message linking
+    to get the semantics right. Created an Input watcher, a UDP Receiver
+    stage, and a test program to exercise them. 
+
+  2005-06-02 19:11:53 (r11) by rcaputo; POE/Request/Returned.pm A
+
+    Renamed from Response.pm 
+
+  2005-06-02 07:09:14 (r10) by rcaputo; PATTERNS M
+
+    Discuss the UDP example at length, since this is where third-sortie
+    POE::Stage has difficulty. Determine that _rsp might actually work,
+    and investigate a plan. 
+
+  2005-06-02 02:38:08 (r9) by rcaputo; PATTERNS M
+
+    Flesh out the idea of connections representing poetalk-like
+    attributes and watchers. Also explain the final TODO in "requests as
+    connections" a little more. 
+
+  2005-06-02 02:07:39 (r8) by rcaputo; PATTERNS A
+
+    Initial add. This document tries to catalog the different kinds of
+    component interaction patterns and mechanisms to support them
+    completely. 
+
+  2005-05-27 14:33:47 (r7) by rcaputo; POE/Watcher/Delay.pm M
+
+    Change the "method" parameter to "_on_success" to fit with the
+    general naming scheme for callbacks. 
+
+  2005-05-27 14:33:14 (r6) by rcaputo; POE/Stage/Ticker.pm M
+
+    Refactor: Move the delay setting code to a common subroutine. 
+
+  2005-05-27 06:49:43 (r3) by rcaputo; TODO A; NOTES M
+
+    Add a TODO file for continuity between development sessions. Update
+    the notes a little. 
+
+  2005-05-27 06:47:01 (r2) by rcaputo; examples/many-responses.perl M
+
+    The timers were set to REALLY FREAKING TINY for memory leak checking.
+    Changed them back to 1 second to make sure the timers were working. 
+
+  2005-05-27 06:20:43 (r1) by rcaputo
+  POE/Stage/TiedAttributes.pm A; /trunk A; POE/Stage.pm A;
+  examples/many-responses.perl A; POE/Stage/Echoer.pm A; POE/Request A;
+  examples/ping-pong.perl A; examples A; POE/Watcher A; /branches A;
+  POE/Stage/Ticker.pm A; POE A; POE/Request/Response.pm A; POE/Stage A;
+  POE/Request.pm A; NOTES A; POE/Watcher/Delay.pm A; /tags A;
+  POE/Watcher.pm A
+
+    Initial import. This is a complete if simple working prototype of an
+    experimental object system. The goal of this project (and others like
+    it) is to explore what it means to be a POE component/object/thingy
+    and attempt to create a standard framework in which they may
+    interact. 
+
+==============
+End of Excerpt
+==============
