@@ -1,4 +1,4 @@
-# $Id: Stage.pm 55 2005-09-15 07:19:21Z rcaputo $
+# $Id: Stage.pm 82 2006-07-08 22:47:24Z rcaputo $
 
 =head1 NAME
 
@@ -23,25 +23,31 @@ POE::Stage is a proposed base class for POE components.  Its purpose
 is to standardize the most common design patterns that have arisen
 through years of POE::Component development.
 
-Complex programs generally perform their tasks in multiple steps, or
-stages.  For example, fetching a web page requires four or so steps:
-1. Look up the host's address.  2. Connect to the remote host.  3.
-Transmit the request.  4. Receive the response.
+Complex programs generally perform their tasks in multiple stages.
+For example, a web request is performed in four major stages: 1. Look
+up the host's address.  2. Connect to the remote host.  3.  Transmit
+the request.  4. Receive the response.
 
 POE::Stage promotes the decomposition of multi-step processes into
-discrete, reusable stages.  In this case: POE::Stage::Resolver to
-resolve host names into addresses.  POE::Stage::Connector to establish
-a socket connection to the remote host.  POE::Stage::StreamIO to
-transmit the request and receive the response.
+discrete, reusable stages.  In this case: POE::Stage::Resolver will
+resolve host names into addresses, POE::Stage::Connector will
+establish a socket connection to the remote host, and
+POE::Stage::StreamIO will transmit the request and receive the
+response.
 
-Stages perform their tasks in response to request messages.  They
-return messages containing the result of each task as it's completed.
+POE::Stage promotes composition of high-level stages from lower-level
+ones.  POE::Stage::HTTPClient might present a simplified
+request/response interface while internally creating and coordinating
+more complex interaction between POE::Stage::Resolver, Connector, and
+StreamIO.  This remains to be seen, however, as POE::Stage is still
+very new software.
 
-If done right, high-level stages will be built from lower-level ones.
-POE::Stage::HTTPClient would present a simple request/response
-interface while internally creating and coordinating
-POE::Stage::Resolver, POE::Stage::Connector, and POE::Stage::StreamIO
-as necessary.
+POE stages are message based.  The message classes, POE::Request and
+its subclasses, implement a standard request/response interface for
+POE stages.  Where possible, POE message passing attempts to mimic
+simpler, more direct calling and returning, albeit asynchronously.
+POE::Stage and POE::Request also implement closures which greatly
+simplify asynchronous state management.
 
 =cut
 
@@ -51,18 +57,24 @@ use warnings;
 use strict;
 
 use vars qw($VERSION);
-$VERSION = do {my($r)=(q$Revision: 55 $=~/(\d+)/);sprintf"0.%04d",$r};
+$VERSION = do {my($r)=(q$Revision: 82 $=~/(\d+)/);sprintf"0.%04d",$r};
 
 use POE::Session;
 
-use Scalar::Util qw(blessed);
+use Attribute::Handlers;
+use PadWalker qw(var_name peek_my);
+use Scalar::Util qw(blessed reftype);
 use Carp qw(croak);
 use POE::Stage::TiedAttributes;
 
 use POE::Request::Emit;
 use POE::Request::Return;
 use POE::Request::Recall;
-use POE::Request;
+use POE::Request qw(REQ_ID);
+
+use POE::Attribute::Request::Scalar;
+use POE::Attribute::Request::Hash;
+use POE::Attribute::Request::Array;
 
 # An internal singleton POE::Session that will drive all the stages
 # for the application.  This should be structured such that we can
@@ -99,6 +111,29 @@ my $singleton_session_id = POE::Session->create(
 				$resource->[0]->deliver();
 			};
 		},
+
+		# Deliver to wheels based on the wheel ID.  Different wheels pass
+		# their IDs in different ARGn offsets, so we need a few of these.
+		wheel_event_0 => sub {
+			$_[CALLER_FILE] =~ m{/([^/.]+)\.pm};
+			eval { "POE::Watcher::Wheel::$1"->deliver(0, @_[ARG0..$#_]); };
+		},
+		wheel_event_1 => sub {
+			$_[CALLER_FILE] =~ m{/([^/.]+)\.pm};
+			eval { "POE::Watcher::Wheel::$1"->deliver(1, @_[ARG0..$#_]); };
+		},
+		wheel_event_2 => sub {
+			$_[CALLER_FILE] =~ m{/([^/.]+)\.pm};
+			eval { "POE::Watcher::Wheel::$1"->deliver(2, @_[ARG0..$#_]); };
+		},
+		wheel_event_3 => sub {
+			$_[CALLER_FILE] =~ m{/([^/.]+)\.pm};
+			eval { "POE::Watcher::Wheel::$1"->deliver(3, @_[ARG0..$#_]); };
+		},
+		wheel_event_4 => sub {
+			$_[CALLER_FILE] =~ m{/([^/.]+)\.pm};
+			eval { "POE::Watcher::Wheel::$1"->deliver(4, @_[ARG0..$#_]); };
+		},
 	},
 )->ID();
 
@@ -120,6 +155,9 @@ to use it.
 
 It is not recommended that subclasses override new.  Rather, they
 should implement init() to initialize themselves after instantiation.
+
+This may change as POE::Stage implements L<Class::MOP>, L<Moose>, or
+other Perl 6 ways.
 
 =cut
 
@@ -172,6 +210,246 @@ sub init {
 	# Do nothing.  Don't even throw an error.
 }
 
+=head2 Req (attribute)
+
+Defines the Req lexical variable attribute for request closures.
+Variables declared this way become members of the request the current
+stage is currently handling.
+
+	sub some_handler {
+		my ($self, $args) = @_;
+		my $request_field :Req = "some value";
+		my $sub_request :Req = POE::Request->new(
+			...,
+			on_xyz => "xyz_handler"
+		);
+	}
+
+Request members are intended to be used as continuations between
+handlers that are invoked within the same request.  The previous
+handler may eventually pass execution to xyz_handler(), which can
+access $request_field and $sub_request if the current stage is still
+handling the current request.
+
+	sub xyz_handler {
+		my ($self, $args) = @_;
+		my $request_field :Req;
+		print "$request_field\n";  # "some value"
+	}
+
+Fields may also be associated with sub-requests being made by the
+current stage.  In this case, variables declared :Rsp within handlers
+for responses to the associated request will also be visible.
+
+	sub some_other_handler {
+		my ($self, $args) = @_;
+		my $request_field :Req = "some value";
+		my $sub_request :Req = POE::Request->new(
+			...,
+			on_xyz => "response_handler"
+		);
+		my $response_field :Req($sub_request) = "visible in the response";
+	}
+
+	sub response_handler {
+		my ($self, $args) = @_;
+		my $request_field :Req;
+		my $response_field :Rsp;
+		print "$request_field\n";   # "some value"
+		print "$response_field\n";  # "visible in the response";
+	}
+
+Three versions of Req() are defined: One each for scalars, arrays, and
+hashes.  You needn't know this since the appropriate one will be used
+depending on the type of variable declared.
+
+=cut
+
+{
+	no warnings 'redefine';
+
+	sub Req :ATTR(SCALAR,RAWDATA) {
+		my ($pkg, $sym, $ref, $attr, $data, $phase) = @_;
+		#warn "pkg($pkg) sym($sym) ref($ref) attr($attr) data($data) phase($phase)\n";
+
+		croak "can't declare a blessed variable as :Req" if blessed($ref);
+
+		my $name = var_name(4, $ref);
+
+		my $request;
+		if (defined $data) {
+			my $my = peek_my(4);
+			croak "Unknown request object '$data'" unless (
+				exists $my->{$data}
+				and reftype($my->{$data}) eq "REF"
+				and UNIVERSAL::isa(${$my->{$data}}, "POE::Request")
+			);
+			$request = ${$my->{$data}};
+		}
+		else {
+			$request = POE::Request->_get_current_request();
+		}
+
+		# TODO - To make this work tidily, we should translate $name into a
+		# reference to the proper request/response field and pass that into
+		# the tie handler.  Then the tied variable can work directly with
+		# the field, or perhaps a weak copy of it.
+
+		return tie(
+			$$ref, "POE::Attribute::Request::Scalar",
+			POE::Request->_get_current_stage(),
+			$request->get_id(),
+			$name
+		);
+	}
+
+	sub Req :ATTR(HASH,RAWDATA) {
+		my ($pkg, $sym, $ref, $attr, $data, $phase) = @_;
+		#warn "pkg($pkg) sym($sym) ref($ref) attr($attr) data($data) phase($phase)\n";
+
+		croak "can't declare a blessed variable as :Req" if blessed($ref);
+
+		my $name = var_name(4, $ref);
+
+		my $request;
+		if (defined $data) {
+			my $my = peek_my(4);
+			croak "Unknown request object '$data'" unless (
+				exists $my->{$data}
+				and reftype($my->{$data}) eq "REF"
+				and UNIVERSAL::isa(${$my->{$data}}, "POE::Request")
+			);
+			$request = ${$my->{$data}};
+		}
+		else {
+			$request = POE::Request->_get_current_request();
+		}
+
+		# TODO - To make this work tidily, we should translate $name into a
+		# reference to the proper request/response field and pass that into
+		# the tie handler.  Then the tied variable can work directly with
+		# the field, or perhaps a weak copy of it.
+
+		return tie(
+			%$ref, "POE::Attribute::Request::Hash",
+			POE::Request->_get_current_stage(),
+			$request->get_id(),
+			$name
+		);
+	}
+
+	sub Req :ATTR(ARRAY,RAWDATA) {
+		my ($pkg, $sym, $ref, $attr, $data, $phase) = @_;
+		#warn "pkg($pkg) sym($sym) ref($ref) attr($attr) data($data) phase($phase)\n";
+
+		croak "can't declare a blessed variable as :Req" if blessed($ref);
+
+		my $name = var_name(4, $ref);
+
+		my $request;
+		if (defined $data) {
+			my $my = peek_my(4);
+			croak "Unknown request object '$data'" unless (
+				exists $my->{$data}
+				and reftype($my->{$data}) eq "REF"
+				and UNIVERSAL::isa(${$my->{$data}}, "POE::Request")
+			);
+			$request = ${$my->{$data}};
+		}
+		else {
+			$request = POE::Request->_get_current_request();
+		}
+
+		# TODO - To make this work tidily, we should translate $name into a
+		# reference to the proper request/response field and pass that into
+		# the tie handler.  Then the tied variable can work directly with
+		# the field, or perhaps a weak copy of it.
+
+		return tie(
+			@$ref, "POE::Attribute::Request::Array",
+			POE::Request->_get_current_stage(),
+			$request->get_id(),
+			$name
+		);
+	}
+}
+
+{
+	no warnings 'redefine';
+
+	sub Rsp :ATTR(SCALAR,RAWDATA) {
+		my ($pkg, $sym, $ref, $attr, $data, $phase) = @_;
+		#warn "pkg($pkg) sym($sym) ref($ref) attr($attr) data($data) phase($phase)\n";
+
+		croak "can't declare a blessed variable as :Rsp" if blessed($ref);
+
+		my $name = var_name(4, $ref);
+
+		# TODO - To make this work tidily, we should translate $name into a
+		# reference to the proper request/response field and pass that into
+		# the tie handler.  Then the tied variable can work directly with
+		# the field, or perhaps a weak copy of it.
+
+		my $stage = POE::Request->_get_current_stage();
+		my $response_id = $stage->{rsp}->get_id();
+
+		return tie(
+			$$ref, "POE::Attribute::Request::Scalar",
+			$stage,
+			$response_id,
+			$name
+		);
+	}
+
+	sub Rsp :ATTR(HASH,RAWDATA) {
+		my ($pkg, $sym, $ref, $attr, $data, $phase) = @_;
+		#warn "pkg($pkg) sym($sym) ref($ref) attr($attr) data($data) phase($phase)\n";
+
+		croak "can't declare a blessed variable as :Rsp" if blessed($ref);
+
+		my $name = var_name(4, $ref);
+
+		# TODO - To make this work tidily, we should translate $name into a
+		# reference to the proper request/response field and pass that into
+		# the tie handler.  Then the tied variable can work directly with
+		# the field, or perhaps a weak copy of it.
+
+		my $stage = POE::Request->_get_current_stage();
+		my $response_id = $stage->{rsp}->get_id();
+
+		return tie(
+			%$ref, "POE::Attribute::Request::Hash",
+			$stage,
+			$response_id,
+			$name
+		);
+	}
+
+	sub Rsp :ATTR(ARRAY,RAWDATA) {
+		my ($pkg, $sym, $ref, $attr, $data, $phase) = @_;
+		#warn "pkg($pkg) sym($sym) ref($ref) attr($attr) data($data) phase($phase)\n";
+
+		croak "can't declare a blessed variable as :Rsp" if blessed($ref);
+
+		my $name = var_name(4, $ref);
+
+		# TODO - To make this work tidily, we should translate $name into a
+		# reference to the proper request/response field and pass that into
+		# the tie handler.  Then the tied variable can work directly with
+		# the field, or perhaps a weak copy of it.
+
+		my $stage = POE::Request->_get_current_stage();
+		my $response_id = $stage->{rsp}->get_id();
+
+		return tie(
+			@$ref, "POE::Attribute::Request::Array",
+			$stage,
+			$response_id,
+			$name
+		);
+	}
+}
+
 1;
 
 =head1 USING
@@ -181,51 +459,43 @@ for designing and subclassing.
 
 =head1 DESIGN GOALS
 
-Eliminate the need to manage POE::Session objects directly.  One
-common component pattern uses an object as its command interface.
-Creating the object starts an internal POE::Session.  Destroying the
-command object shuts that session down.  POE::Stage takes care of the
-session management.
+As mentioned before, POE::Stage strives to implement a standard for
+POE best practices.  It embodies some of POE's best and most common
+design patterns so you no longer have to.
 
-Standardize messages between components.  POE components sport a wide
-variety of message-based interfaces, limiting their interoperability.
-POE::Stage provides a base POE::Message class that can be used by
-itself or subclassed.
+Things POE::Stage does for you:
 
-Create a class library for event watchers.  POE's Kernel-based
-watchers divert their ownership away from objects and sessions.
-POE::Watcher objects wrap and manage POE::Kernel's watchers, providing
-a clear indicator of their ownership and lifetimes.
+It manages POE::Session objects so you can deal with truly
+object-oriented POE::Stages.  The event-based gyrations are subsumed
+and automated by POE::Stage.
 
-Eliminate positional event parameters.  POE promotes the use of
-positional parameters (ARG0, ARG1, etc.)  POE::Stage uses named
-parameters throughout.  POE::Watcher objects translate POE::Kernel's
-ARG0-based values into named parameters.  POE::Message objects use
-named parameters.
+It provides a form of message-based continuation so that specially
+declared variables (using the :Req and :Rsp attributes) are
+automatically tracked between the time a message is sent and its
+response arrives.  No more HEAPs and tracking request state manually.
 
-Standardize message and event handlers' calling conventions.  All
-POE::Message and POE::Watcher callbacks accept the same two
-parameters: $self and a hash reference containing named parameters.
+It simplifies the call signature of message handlers, eliminating @_
+list slices, positional parameters, and mysteriously imported
+constants (HEAP, ARG0, etc.).
 
-Eliminate the need to manage task-specific data.  POE components must
-explicitly create task contexts internally and associate them with
-requests.  As requests finish, components need to ensure their
-associated contexts are cleaned up or memory leaks ensue.  POE::Stage
-provides special data members, $self->{req} and $self->{rsp}.  They
-are automatically associated with requests being made of an outer
-stage or being made to an inner or sub-stage, respectively.  They are
-automatically cleaned up when a request is finished.
+It defines a standardized message class (POE::Request and its
+subclasses) and a mechanism for passing messages between POE stages.
+POE::Stage authors won't need to roll their own interface mechanisms,
+so programmers will not need to learn one for each module in use.
+
+POE::Stage implements object-oriented classes for low-level event
+watchers.  This simplifies POE::Kernel's interface and allows it to be
+extended celanly.  Event watcher ownerships and lifetimes are clearly
+indicated.
 
 Standardize the means to shut down stages.  POE components implement a
 variety of shutdown methods.  POE::Stage objects are shut down by
 destroying their objects.
 
-Associate high-level requests with the lower-level requests that are
-made to complete a task.  Interactions between multiple POE components
-requires very careful state and object management, often explicitly
-coded by the components' user.  POE::Stage combines request-scoped
-data with object-based requests, watchers, and stages, to
-automatically clean up all the resources associated with a request.
+It simplifies cleanup when requests are finished.  The convention of
+storing request-scoped data in request continuations means that
+sub-stages, sub-requests, event watchers, and everything else is
+automatically cleaned up when a request falls out of scope.
 
 =head1 BUGS
 
@@ -238,7 +508,11 @@ POE::Request is the class that defines inter-stage messages.
 POE::Watcher is the base class for event watchers, without which
 POE::Stage won't run very well.
 
-SEDA is at L<http://www.eecs.harvard.edu/~mdw/proj/seda/>.
+L<http://thirdlobe.com/projects/poe-stage/> - POE::Stage is hosted
+here.
+
+L<http://www.eecs.harvard.edu/~mdw/proj/seda/> - SEDA, the Staged
+Event Driven Architecture.  It's Java, though.
 
 =head1 AUTHORS
 
@@ -246,7 +520,7 @@ Rocco Caputo <rcaputo@cpan.org>.
 
 =head1 LICENSE
 
-POE::Stage is Copyright 2005 by Rocco Caputo.  All rights are
+POE::Stage is Copyright 2005-2006 by Rocco Caputo.  All rights are
 reserved.  You may use, modify, and/or distribute this module under
 the same terms as Perl itself.
 

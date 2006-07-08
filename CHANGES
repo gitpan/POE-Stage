@@ -1,6 +1,192 @@
-==============================
-9999-99-99 99:99:99 (untagged)
-==============================
+===========================
+2006-07-08 23:00:45 v0_0082
+===========================
+
+  2006-07-08 22:53:34 (r85) by rcaputo; MANIFEST M
+
+    Add more examples to the MANIFEST. 
+
+  2006-07-08 22:51:57 (r84) by rcaputo; examples/01_basics.perl M
+
+    Add keywords expansion. 
+
+  2006-07-08 22:51:28 (r83) by rcaputo; Makefile.PL M
+
+    Add new dependencies. 
+
+  2006-07-08 22:47:24 (r82) by rcaputo
+  lib/POE/Stage.pm M; lib/POE/Request.pm M; t/01_all_call_types.t M
+
+    Remove the need for overload.pm magic. 
+
+  2006-07-08 22:11:46 (r81) by rcaputo
+  lib/POE/Request/Upward.pm M; lib/POE/Request/Recall.pm M;
+  lib/POE/Watcher/Delay.pm M; lib/POE/Watcher/Input.pm M;
+  lib/POE/Watcher.pm M; lib/POE/Stage/TiedAttributes.pm M;
+  lib/POE/Attribute/Request/Scalar.pm M; lib/POE/Watcher/Wheel.pm M;
+  lib/POE/Stage.pm M; lib/POE/Stage/Resolver.pm M;
+  lib/POE/Stage/Receiver.pm M; lib/POE/Request/Return.pm M;
+  lib/POE/Stage/Echoer.pm M; lib/POE/Attribute/Request/Array.pm M;
+  lib/POE/Attribute/Request/Hash.pm M; lib/POE/Stage/Ticker.pm M;
+  lib/POE/Request/Emit.pm M; lib/POE/Request.pm M
+
+    Major documentation revision. Reword things so they're more true in
+    light of the recent syntax changes. Remove deprecated syntax. Clean
+    up whatever looked iffy at the time. 
+
+  2006-07-08 16:18:06 (r80) by rcaputo
+  lib/POE/Request/TiedAttributes.pm D
+
+    Not needed anymore! Yay! 
+
+  2006-07-08 16:09:07 (r79) by rcaputo
+  examples/ping-pong.perl M; examples/self-requesting-stage.perl M;
+  examples/log-resolver.perl M; examples/udp-peer.perl M;
+  examples/many-responses.perl M; lib/POE/Stage/TiedAttributes.pm M;
+  examples/wheel-run.perl M; lib/POE/Stage/Resolver.pm M;
+  lib/POE/Stage/Ticker.pm M; examples/tcp-server.perl M;
+  lib/POE/Stage/Receiver.pm M
+
+    Fix the sample stages ande example programs to use the attribute
+    syntax rather than storing to requests directly. 
+
+  2006-07-08 12:52:19 (r78) by rcaputo
+  lib/POE/Request/Recall.pm M; lib/POE/Request/Upward.pm M; MANIFEST M;
+  lib/POE/Request/TiedAttributes.pm M; lib/POE/Request/Emit.pm M;
+  lib/POE/Request/Return.pm M; lib/POE/Request.pm M;
+  t/01_all_call_types.t M
+
+    Removed $self->{req}{foo} and $self->{rsp}{foo} support. Replaced
+    their use with my $foo :Req and my $foo :Rsp support, at least in the
+    test program. Still need to go through the examples. 
+
+  2006-07-08 07:15:18 (r77) by rcaputo
+  lib/POE/Request/Recall.pm M; lib/POE/Request/Upward.pm M;
+  lib/POE/Watcher/Delay.pm M; lib/POE/Watcher/Input.pm M;
+  examples/01_basics.perl M; lib/POE/Watcher/Wheel.pm M; lib/POE/Stage.pm
+  M; lib/POE/Request.pm M
+
+    Add ":Req($request_object)" attribute syntax. Lexicals declared with
+    this attribute will be available as ":Rsp" for responses to the
+    particular request. 
+
+  2006-07-08 07:13:57 (r76) by rcaputo
+  lab/SweetState.pm M; lab/sweet-state.perl M
+
+    Test raw attribute data combined with PadWalker. Works great! 
+
+  2006-07-05 08:09:57 (r75) by rcaputo; examples/01_basics.perl M
+
+    Document an idea about using :Req or :Rsp to associate the front-end
+    data with the back end data on the request. 
+
+  2006-07-05 07:45:17 (r74) by rcaputo
+  examples/01_basics.perl M; lib/POE/Stage.pm M
+
+    Add initial :Rsp syntax, and extend examples/01_basic.perl to explore
+    it. 
+
+  2006-07-05 07:26:01 (r73) by rcaputo
+  lib/POE/Attribute/Request/Array.pm M; lab/SweetState.pm M;
+  lib/POE/Attribute/Request/Hash.pm M; examples/01_basics.perl A;
+  lab/sweet-state.perl M; lib/POE/Attribute/Request/Scalar.pm M;
+  lib/POE/Stage.pm M; lib/POE/Request.pm M
+
+    Create the :Req attribute. Variables declared :Req become part of a
+    request-scoped continuation. 
+
+  2006-07-05 07:23:44 (r72) by rcaputo
+  lib/POE/Attribute/Request/Array.pm A; lib/POE/Attribute/Request/Hash.pm
+  A; lib/POE/Attribute/Request A; lib/POE/Attribute/Request/Scalar.pm A;
+  lib/POE/Attribute A
+
+    Add the hidden tie magic behind the :Req attribute. 
+
+  2006-07-05 01:19:42 (r71) by rcaputo
+  lab/SweetState.pm A; lab/sweet-state.perl M
+
+    Move the sweet state management code into its own base class. This
+    works, so we can move the attribute interface code into POE::Stage
+    next. Once that's done, I think it needs to hook into the existing
+    request/response state management code. After that, the magic that
+    manages state through $self->{req} and $self->{rsp} can go away.
+    Finally, I think $self->{req} and $self->{rsp} might be better off as
+    accessors. 
+
+  2006-07-04 08:51:42 (r70) by rcaputo; lab/sweet-state.perl A
+
+    A prototype for a promising melange of lexical variable attributes,
+    PadWalker, and tie(), giving us "my $foo :Req;" as a replacement for
+    $self->{req}{foo}. 
+
+  2006-07-04 03:37:08 (r69) by rcaputo; t/01_all_call_types.t M
+
+    Grrr. Vim should treat this as Perl code. 
+
+  2006-04-10 18:38:29 (r68) by mathieu
+  lib/POE/Request/Return.pm M; lib/POE/Request.pm M;
+  t/01_all_call_types.t M
+
+    Default request return type to "return", and default emit type to
+    "emit".
+
+  2006-02-06 08:53:33 (r67) by rcaputo; examples/tcp-server.perl M
+
+    Note a recurring theme. 
+
+  2006-02-06 08:50:11 (r66) by rcaputo; examples/tcp-server.perl M
+
+    Remove some commented out code. 
+
+  2006-02-06 08:48:37 (r65) by rcaputo; lib/POE/Request.pm M
+
+    Add initial support of on_my_messagetype() methods. This is a raw,
+    unpolished feature and is subject to change. 
+
+  2006-02-06 08:48:01 (r64) by rcaputo; examples/tcp-server.perl A
+
+    Add an example of the on_my_messagetype() feature. Stages can handle
+    their own messages by adding on_my_messagetype() methods. These
+    methods are called whenever emit() or return() would send a message
+    of the appropriate type. Subclasses of a stage can handle messages
+    themselves. In this way self-contained stages can be written. 
+
+  2006-01-30 04:54:18 (r63) by rcaputo; examples/udp-peer.perl M
+
+    Needed POE::Stage loaded. base.pm doesn't do it for us. 
+
+  2005-10-12 21:04:48 (r62) by rcaputo; lib/POE/Stage.pm M
+
+    Wrap the wheel watcher callbacks in block eval so they don't
+    necessarily kill off the entire program. 
+
+  2005-10-10 05:33:05 (r61) by rcaputo
+  .releaserc M; examples/wheel-run.perl M; lib/POE/Watcher/Wheel.pm M;
+  lib/POE/Watcher/Wheel/Run.pm M
+
+    Enabele $Id$ on the touched files. 
+
+  2005-10-10 05:32:00 (r60) by rcaputo
+  examples/wheel-run.perl A; lib/POE/Watcher/Wheel.pm A; lib/POE/Stage.pm
+  M; lib/POE/Watcher/Wheel/Run.pm A; lib/POE/Watcher/Wheel A
+
+    Add initial POE::Watcher::Wheel support, along with
+    POE::Watcher::Wheel::Run as a proof of concept and a test case. Need
+    to document this better. 
+
+  2005-10-03 01:03:40 (r59) by rcaputo
+  README D; Makefile.PL M; lib/POE/Stage.pm M
+
+    Automatically generate the README from POE::Stage's perldoc. 
+
+  2005-10-03 01:01:55 (r58) by rcaputo; .releaserc A
+
+    So we can just "release" to fling a new version into the big, blue
+    world. 
+
+=========================
+2005-10-03 00:49:01 v0_55
+=========================
 
   2005-09-15 07:19:21 (r55) by rcaputo
   examples/self-requesting-stage.perl M; lib/POE/Request/Upward.pm M;

@@ -1,10 +1,11 @@
 #!/usr/bin/perl
-# $Id: 01_all_call_types.t 55 2005-09-15 07:19:21Z rcaputo $
+# $Id: 01_all_call_types.t 82 2006-07-08 22:47:24Z rcaputo $
+# vim: filetype=perl
 
 use warnings;
 use strict;
 
-use Test::More tests => 25;
+use Test::More tests => 19;
 
 my $go_req;
 my $key_value;
@@ -27,13 +28,9 @@ my $key_value;
 		);
 
 		ok(
-			$self->{req} == $go_req,
-			"do_emit req (".($self->{req}+0).") should match go_req (".($go_req+0).")"
-		);
-
-		ok(
-			$self->{req} eq $go_req,
-			"do_emit req ($self->{req}) should match go_req ($go_req)"
+			$self->{req}->get_id() == $go_req->get_id(),
+			"do_emit req (" .  $self->{req}->get_id() .
+			") should match go_req (" . $go_req->get_id() . ")"
 		);
 
 		ok(
@@ -43,18 +40,20 @@ my $key_value;
 
 		# TODO - Don't bleed the requestor's state into the requestee.
 
+		my $key :Req;
 		ok(
-			!exists($self->{req}{key}),
-			"do_emit key should not exist" . (
-				exists($self->{req}{key})
-				? " (let alone be $self->{req}{key})"
+			!defined($key),
+			"do_emit key should not be defined" . (
+				defined($key)
+				? " (let alone be $key)"
 				: ""
 			)
 		);
 
-		$self->{original_newkey} = $self->{req}{newkey} = 8675;
+		my $newkey :Req = $self->{original_newkey} = 8675;
 
-		$self->{req}->emit( type => "emit" );
+		$self->{req}->emit(  );
+		#$self->{req}->emit( type => "emit" );
 	}
 
 	sub do_return {
@@ -66,14 +65,9 @@ my $key_value;
 		);
 
 		ok(
-			$self->{req} == $go_req,
-			"do_return req (" . ($self->{req}+0) . ") should match go_req (" .
-			($go_req+0) . ")"
-		);
-
-		ok(
-			$self->{req} eq $go_req,
-			"do_return req ($self->{req}) should match go_req ($go_req)"
+			$self->{req}->get_id() == $go_req->get_id(),
+			"do_return req (" . $self->{req}->get_id() . ") should match go_req (" .
+			$go_req->get_id() . ")"
 		);
 
 		ok(
@@ -83,21 +77,24 @@ my $key_value;
 
 		# TODO - Don't bleed the requestor's state into the requestee.
 
+		my $key :Req;
 		ok(
-			!exists($self->{req}{key}),
-			"do_return req.key should not exist" . (
-				exists($self->{req}{key})
-				? " (let alone be $self->{req}{key})"
+			!defined($key),
+			"do_return req.key should not be defined" . (
+				defined($key)
+				? " (let alone be $key)"
 				: ""
 			)
 		);
 
+		my $newkey :Req;
 		ok(
-			$self->{original_newkey} == $self->{req}{newkey},
+			$self->{original_newkey} == $newkey,
 			"do_return original_newkey should match req.newkey"
 		);
 
-		$self->{req}->return( type => "return" );
+		$self->{req}->return();
+		#$self->{req}->return( type => "return" );
 	}
 }
 
@@ -112,9 +109,9 @@ my $key_value;
 	sub run {
 		my ($self, $args) = @_;
 
-		$self->{req}{something} = Something->new();
-		$self->{req}{go} = POE::Request->new(
-			stage     => $self->{req}{something},
+		my $something :Req = Something->new();
+		my $go :Req = POE::Request->new(
+			stage     => $something,
 			method    => "do_emit",
 			on_emit   => "do_recall",
 			on_return => "do_return",
@@ -122,9 +119,9 @@ my $key_value;
 
 		# Save the original req for comparison later.
 		$self->{original_req} = $self->{req};
-		$go_req = $self->{original_sub} = $self->{req}{go};
+		$go_req = $self->{original_sub} = $go;
 
-		$key_value = $self->{original_key} = $self->{req}{go}{key} = 309;
+		$key_value = $self->{original_key} = my $key :Req($go) = 309;
 	}
 
 	sub do_recall {
@@ -141,30 +138,21 @@ my $key_value;
 		);
 
 		ok(
-			$self->{req} == $self->{original_req},
-			"emit req (" . ($self->{req}+0) . ") should match original (" .
-			($self->{original_req}+0) . ")"
+			$self->{req}->get_id() == $self->{original_req}->get_id(),
+			"emit req (" . $self->{req}->get_id() . ") should match original (" .
+			$self->{original_req}->get_id() . ")"
 		);
 
 		ok(
-			$self->{req} eq $self->{original_req},
-			"emit req ($self->{req}) should match original ($self->{original_req})"
+			$self->{rsp}->get_id() == $self->{original_sub}->get_id(),
+			"emit rsp (" . ($self->{rsp}->get_id()) . ") should match original (" .
+			($self->{original_sub}->get_id()) . ")"
 		);
 
+		my $key :Rsp;
 		ok(
-			$self->{rsp} == $self->{original_sub},
-			"emit rsp (" . ($self->{rsp}+0) . ") should match original (" .
-			($self->{original_sub}+0) . ")"
-		);
-
-		ok(
-			$self->{rsp} eq $self->{original_sub},
-			"emit rsp ($self->{rsp}) should match original ($self->{original_sub})"
-		);
-
-		ok(
-			$self->{rsp}{key} == $self->{original_key},
-			"emit rsp.key ($self->{rsp}{key}) " .
+			$key == $self->{original_key},
+			"emit rsp.key ($key) " .
 			"should match original ($self->{original_key})"
 		);
 
@@ -185,31 +173,21 @@ my $key_value;
 		);
 
 		ok(
-			$self->{req} == $self->{original_req},
-			"ret req (" . ($self->{req}+0) . ") should match original (" .
-			($self->{original_req}+0) . ")"
+			$self->{req}->get_id() == $self->{original_req}->get_id(),
+			"ret req (" . $self->{req}->get_id() . ") should match original (" .
+			$self->{original_req}->get_id() . ")"
 		);
 
 		ok(
-			$self->{req} eq $self->{original_req},
-			"ret req ($self->{req}) should match original ($self->{original_req})"
+			$self->{rsp}->get_id() == $self->{original_sub}->get_id(),
+			"ret rsp (" . $self->{rsp}->get_id() . ") " .
+			"should match original sub (" . $self->{original_sub}->get_id() . ")"
 		);
 
+		my $key :Rsp;
 		ok(
-			$self->{rsp} == $self->{original_sub},
-			"ret rsp (" . ($self->{rsp}+0) . ") " .
-			"should match original sub (" . ($self->{original_sub}+0) . ")"
-		);
-
-		ok(
-			$self->{rsp} eq $self->{original_sub},
-			"ret rsp ($self->{rsp}) " .
-			"should match original sub ($self->{original_sub})"
-		);
-
-		ok(
-			$self->{rsp}{key} == $self->{original_key},
-			"ret key ($self->{rsp}{key}) " .
+			$key == $self->{original_key},
+			"ret key ($key) " .
 			"should match original ($self->{original_key})"
 		);
 

@@ -1,9 +1,10 @@
-# $Id: Makefile.PL 38 2005-07-12 23:38:42Z rcaputo $
+# $Id: Makefile.PL 83 2006-07-08 22:51:28Z rcaputo $
 
 use ExtUtils::MakeMaker;
 
-# Touch CHANGES so it exists.
+# Touch auto-generated files so we don't see warnings.
 open(CHANGES, ">>CHANGES") and close CHANGES;
+open(README, ">>README")   and close README;
 
 WriteMakefile(
   NAME         => 'POE::Stage',
@@ -11,14 +12,19 @@ WriteMakefile(
   ABSTRACT     => 'a prototype of a successor to POE::Component',
   VERSION_FROM => 'lib/POE/Stage.pm',
   PREREQ_PM    => {
-    POE        => 0.31,
-    Test::More => 0,
+		Attribute::Handlers => 0.78,
+		Net::DNS            => 0.53,
+		PadWalker           => 1.0,
+		Scalar::Util        => 1.18,
+    POE                 => 0.3502,
+    Test::More          => 0,
   },
   dist         => {
     COMPRESS   => 'gzip -9f',
     SUFFIX     => 'gz',
     PREOP      => (
-      'svn-log.perl | tee ./$(DISTNAME)-$(VERSION)/CHANGES > ./CHANGES'
+      'svn-log.perl | tee ./$(DISTNAME)-$(VERSION)/CHANGES > ./CHANGES;' .
+			'perldoc lib/POE/Stage.pm > README'
     ),
   },
 );

@@ -1,4 +1,4 @@
-# $Id: Ticker.pm 55 2005-09-15 07:19:21Z rcaputo $
+# $Id: Ticker.pm 81 2006-07-08 22:11:46Z rcaputo $
 
 =head1 NAME
 
@@ -6,9 +6,9 @@ POE::Stage::Ticker - a periodic message generator for POE::Stage
 
 =head1 SYNOPSIS
 
-	$self->{req}{ticker} = POE::Stage::Ticker->new();
-	$self->{req}{request} = POE::Request->new(
-		stage       => $self->{req}{ticker},
+	my $ticker :Req = POE::Stage::Ticker->new();
+	my $request :Req = POE::Request->new(
+		stage       => $ticker,
 		method      => "start_ticking",
 		on_tick     => "handle_tick",   # Invoke my handle_tick() method
 		args        => {
@@ -51,8 +51,8 @@ sub start_ticking {
 	# Since a single request can generate many ticks, keep a counter so
 	# we can tell one from another.
 
-	$self->{req}{tick_id}  = 0;
-	$self->{req}{interval} = $args->{interval};
+	my $tick_id   :Req = 0;
+	my $interval  :Req = $args->{interval};
 
 	$self->set_delay();
 }
@@ -66,12 +66,13 @@ sub got_watcher_tick {
 	# POE::Watcher::Delay object.  We can use either one, but I thought
 	# it would be nice for testing and illustrative purposes to make
 	# sure they both agree.
-	die unless $self->{req}{interval} == $args->{interval};
+	die unless my $interval :Req == $args->{interval};
 
+	my $tick_id :Req;
 	$self->{req}->emit(
 		type  => "tick",
 		args  => {
-			id  => ++$self->{req}{tick_id},
+			id  => ++$tick_id,
 		},
 	);
 
@@ -85,11 +86,12 @@ sub got_watcher_tick {
 sub set_delay {
 	my $self = shift;
 
-	$self->{req}{delay} = POE::Watcher::Delay->new(
-		seconds     => $self->{req}{interval},
+	my $interval :Req;
+	my $delay :Req = POE::Watcher::Delay->new(
+		seconds     => $interval,
 		on_success  => "got_watcher_tick",
 		args        => {
-			interval  => $self->{req}{interval},
+			interval  => $interval,
 		},
 	);
 }
@@ -108,13 +110,14 @@ ticks from multiple tickers are not confused.
 
 =head1 BUGS
 
-See http://thirdlobe.com/projects/poe-stage/report/1 for known issues.
-See http://thirdlobe.com/projects/poe-stage/newticket to report one.
+See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
+issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
+report one.
 
 =head1 SEE ALSO
 
-POE::Stage and POE::Request.  The examples/many-responses.perl program
-in POE::Stage's distribution.
+L<POE::Stage> and L<POE::Request>.  The examples/many-responses.perl
+program in POE::Stage's distribution.
 
 =head1 AUTHORS
 
@@ -122,8 +125,8 @@ Rocco Caputo <rcaputo@cpan.org>.
 
 =head1 LICENSE
 
-POE::Stage::Ticker is Copyright 2005 by Rocco Caputo.  All rights are
-reserved.  You may use, modify, and/or distribute this module under
-the same terms as Perl itself.
+POE::Stage::Ticker is Copyright 2005-2006 by Rocco Caputo.  All rights
+are reserved.  You may use, modify, and/or distribute this module
+under the same terms as Perl itself.
 
 =cut

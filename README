@@ -1,20 +1,193 @@
-$Id: README 38 2005-07-12 23:38:42Z rcaputo $
+POE::Stage(3)         User Contributed Perl Documentation        POE::Stage(3)
 
-POE::Stage is a temporary, experimental project to formalize POE
-components and provide a base class to make their creation and use a
-lot easier and cleaner.  The project's Subversion repository is hosted
-at https://thirdlobe.com/svn/poe-stage/trunk/ .
 
-Please poke around in the code.  Think about how it may help or hinder
-your development efforts.  Let me know what I'm doing right.  Explain
-the errors of my ways when I get something wrong.  Request features.
-Send patches.
 
-The project's name may change in the near future, but your guess is as
-good as mine what it will become.  Maybe your guess is better.  Send
-in your spiffy suggestions.
+NNAAMMEE
+       POE::Stage − a proposed base class for formalized POE components
 
-Thanks for your interest.
+SSYYNNOOPPSSIISS
+               # Note, this is not a complete program.
+               # See the distribution’s examples directory.
 
--- 
-Rocco Caputo - http://poe.perl.org/
+               my $stage = POE::Stage::Subclass‐>new();
+
+               my $request = POE::Request‐>new(
+                       stage   => $stage,            # Invoke this stage
+                       method  => "method_name",     # calling this method
+                       args    => \%parameter_pairs, # with these parameters.
+               );
+
+DDEESSCCRRIIPPTTIIOONN
+       POE::Stage is a proposed base class for POE components.  Its purpose is
+       to standardize the most common design patterns that have arisen through
+       years of POE::Component development.
+
+       Complex programs generally perform their tasks in multiple stages.  For
+       example, a web request is performed in four major stages: 1. Look up
+       the host’s address.  2. Connect to the remote host.  3.  Transmit the
+       request.  4. Receive the response.
+
+       POE::Stage promotes the decomposition of multi‐step processes into dis‐
+       crete, reusable stages.  In this case: POE::Stage::Resolver will
+       resolve host names into addresses, POE::Stage::Connector will establish
+       a socket connection to the remote host, and POE::Stage::StreamIO will
+       transmit the request and receive the response.
+
+       POE::Stage promotes composition of high‐level stages from lower‐level
+       ones.  POE::Stage::HTTPClient might present a simplified
+       request/response interface while internally creating and coordinating
+       more complex interaction between POE::Stage::Resolver, Connector, and
+       StreamIO.  This remains to be seen, however, as POE::Stage is still
+       very new software.
+
+       POE stages are message based.  The message classes, POE::Request and
+       its subclasses, implement a standard request/response interface for POE
+       stages.  Where possible, POE message passing attempts to mimic simpler,
+       more direct calling and returning, albeit asynchronously.  POE::Stage
+       and POE::Request also implement closures which greatly simplify asyn‐
+       chronous state management.
+
+RREESSEERRVVEEDD MMEETTHHOODDSS
+       As a base class, POE::Stage must reserve a small number of methods for
+       its own.
+
+       nneeww PPAARRAAMMEETTEERR__PPAAIIRRSS
+
+       Create and return a new POE::Stage object, optionally passing key/value
+       PAIRS in its _i_n_i_t_(_) callback’s $args parameter.  Unlike in POE, you
+       must save the object POE::Stage−>_n_e_w_(_) returns if you intend to use it.
+
+       It is not recommended that subclasses override new.  Rather, they
+       should implement _i_n_i_t_(_) to initialize themselves after instantiation.
+
+       This may change as POE::Stage implements Class::MOP, Moose, or other
+       Perl 6 ways.
+
+       iinniitt PPAARRAAMMEETTEERR__PPAAIIRRSS
+
+       _i_n_i_t_(_) is a virtual base method used to initialize POE::Stage objects
+       after construction.  Subclasses override this to perform their own ini‐
+       tialization.  The _n_e_w_(_) constructor will pass its public parameters
+       through to $self−>init($key_value_pairs).
+
+       RReeqq ((aattttrriibbuuttee))
+
+       Defines the Req lexical variable attribute for request closures.  Vari‐
+       ables declared this way become members of the request the current stage
+       is currently handling.
+
+               sub some_handler {
+                       my ($self, $args) = @_;
+                       my $request_field :Req = "some value";
+                       my $sub_request :Req = POE::Request‐>new(
+                               ...,
+                               on_xyz => "xyz_handler"
+                       );
+               }
+
+       Request members are intended to be used as continuations between han‐
+       dlers that are invoked within the same request.  The previous handler
+       may eventually pass execution to _x_y_z___h_a_n_d_l_e_r_(_), which can access
+       $request_field and $sub_request if the current stage is still handling
+       the current request.
+
+               sub xyz_handler {
+                       my ($self, $args) = @_;
+                       my $request_field :Req;
+                       print "$request_field\n";  # "some value"
+               }
+
+       Fields may also be associated with sub‐requests being made by the cur‐
+       rent stage.  In this case, variables declared :Rsp within handlers for
+       responses to the associated request will also be visible.
+
+               sub some_other_handler {
+                       my ($self, $args) = @_;
+                       my $request_field :Req = "some value";
+                       my $sub_request :Req = POE::Request‐>new(
+                               ...,
+                               on_xyz => "response_handler"
+                       );
+                       my $response_field :Req($sub_request) = "visible in the response";
+               }
+
+               sub response_handler {
+                       my ($self, $args) = @_;
+                       my $request_field :Req;
+                       my $response_field :Rsp;
+                       print "$request_field\n";   # "some value"
+                       print "$response_field\n";  # "visible in the response";
+               }
+
+       Three versions of _R_e_q_(_) are defined: One each for scalars, arrays, and
+       hashes.  You needn’t know this since the appropriate one will be used
+       depending on the type of variable declared.
+
+UUSSIINNGG
+       TODO − Describe how POE::Stage is used.  Outline the general pattern
+       for designing and subclassing.
+
+DDEESSIIGGNN GGOOAALLSS
+       As mentioned before, POE::Stage strives to implement a standard for POE
+       best practices.  It embodies some of POE’s best and most common design
+       patterns so you no longer have to.
+
+       Things POE::Stage does for you:
+
+       It manages POE::Session objects so you can deal with truly object‐ori‐
+       ented POE::Stages.  The event‐based gyrations are subsumed and auto‐
+       mated by POE::Stage.
+
+       It provides a form of message‐based continuation so that specially
+       declared variables (using the :Req and :Rsp attributes) are automati‐
+       cally tracked between the time a message is sent and its response
+       arrives.  No more HEAPs and tracking request state manually.
+
+       It simplifies the call signature of message handlers, eliminating @_
+       list slices, positional parameters, and mysteriously imported constants
+       (HEAP, ARG0, etc.).
+
+       It defines a standardized message class (POE::Request and its sub‐
+       classes) and a mechanism for passing messages between POE stages.
+       POE::Stage authors won’t need to roll their own interface mechanisms,
+       so programmers will not need to learn one for each module in use.
+
+       POE::Stage implements object‐oriented classes for low‐level event
+       watchers.  This simplifies POE::Kernel’s interface and allows it to be
+       extended celanly.  Event watcher ownerships and lifetimes are clearly
+       indicated.
+
+       Standardize the means to shut down stages.  POE components implement a
+       variety of shutdown methods.  POE::Stage objects are shut down by
+       destroying their objects.
+
+       It simplifies cleanup when requests are finished.  The convention of
+       storing request‐scoped data in request continuations means that
+       sub−stages, sub−requests, event watchers, and everything else is auto‐
+       matically cleaned up when a request falls out of scope.
+
+BBUUGGSS
+       See http://thirdlobe.com/projects/poe−stage/report/1 for known issues.
+       See http://thirdlobe.com/projects/poe−stage/newticket to report one.
+
+SSEEEE AALLSSOO
+       POE::Request is the class that defines inter‐stage messages.
+       POE::Watcher is the base class for event watchers, without which
+       POE::Stage won’t run very well.
+
+       <http://thirdlobe.com/projects/poe−stage/> − POE::Stage is hosted here.
+
+       <http://www.eecs.harvard.edu/~mdw/proj/seda/> − SEDA, the Staged Event
+       Driven Architecture.  It’s Java, though.
+
+AAUUTTHHOORRSS
+       Rocco Caputo <rcaputo@cpan.org>.
+
+LLIICCEENNSSEE
+       POE::Stage is Copyright 2005−2006 by Rocco Caputo.  All rights are
+       reserved.  You may use, modify, and/or distribute this module under the
+       same terms as Perl itself.
+
+
+
+perl v5.8.6                       2006‐07‐08                     POE::Stage(3)

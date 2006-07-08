@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: log-resolver.perl 55 2005-09-15 07:19:21Z rcaputo $
+# $Id: log-resolver.perl 79 2006-07-08 16:09:07Z rcaputo $
 
 # Resolve IP addresses in log files into their hosts, in some number
 # of parallel requests.  This example exercises the system's ability
@@ -49,12 +49,7 @@ use strict;
 		# in void context, the framework could hold onto the stage until
 		# it it called return() or cancel().  Then the framework frees it.
 
-		delete $self->{req}{$input};
-
-		my $next_address = read_next_address();
-		return unless defined $next_address;
-
-		$self->resolve_address($next_address);
+		$self->resolve_address(read_next_address());
 	}
 
 	# Handle some error.
@@ -65,12 +60,7 @@ use strict;
 
 		print "Error: $input = $error\n";
 
-		delete $self->{req}{$input};
-
-		my $next_address = read_next_address();
-		return unless defined $next_address;
-
-		$self->resolve_address($next_address);
+		$self->resolve_address(read_next_address());
 	}
 
 	# Plain old subroutine.  Doesn't handle events.
@@ -88,8 +78,15 @@ use strict;
 	sub resolve_address {
 		my ($self, $next_address) = @_;
 
+		my $resolver :Req;
+
+		unless (defined $next_address) {
+			$resolver = undef;
+			return;
+		}
+
 		# Create a self-requesting stage.
-		$self->{req}{$next_address} = POE::Stage::Resolver->new(
+		$resolver = POE::Stage::Resolver->new(
 			on_success  => "handle_host",
 			on_error    => "handle_error",
 			args        => {

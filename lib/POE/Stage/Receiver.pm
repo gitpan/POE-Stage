@@ -1,4 +1,4 @@
-# $Id: Receiver.pm 55 2005-09-15 07:19:21Z rcaputo $
+# $Id: Receiver.pm 81 2006-07-08 22:11:46Z rcaputo $
 
 =head1 NAME
 
@@ -70,16 +70,16 @@ message types to appropriate handlers.
 sub listen {
 	my ($self, $args) = @_;
 
-	$self->{req}{bind_port} = delete $args->{bind_port};
+	my $bind_port :Req = delete $args->{bind_port};
 
-	$self->{req}{socket} = IO::Socket::INET->new(
+	my $socket :Req = IO::Socket::INET->new(
 		Proto     => 'udp',
-		LocalPort => $self->{req}{bind_port},
+		LocalPort => $bind_port,
 	);
-	die "Can't create UDP socket: $!" unless $self->{req}{socket};
+	die "Can't create UDP socket: $!" unless $socket;
 
-	$self->{req}{udp_watcher} = POE::Watcher::Input->new(
-		handle    => $self->{req}{socket},
+	my $udp_watcher :Req = POE::Watcher::Input->new(
+		handle    => $socket,
 		on_input  => "handle_input"
 	);
 }
@@ -87,8 +87,9 @@ sub listen {
 sub handle_input {
 	my ($self, $args) = @_;
 
+	my $socket :Req;
 	my $remote_address = recv(
-		$self->{req}{socket},
+		$socket,
 		my $datagram = "",
 		DATAGRAM_MAXLEN,
 		0
@@ -124,8 +125,9 @@ respond to a datagram emitted by the Receiver.
 sub send {
 	my ($self, $args) = @_;
 
+	my $socket :Req;
 	return if send(
-		$self->{req}{socket},
+		$socket,
 		$args->{datagram},
 		0,
 		$args->{remote_address},
@@ -171,13 +173,14 @@ string form.
 
 =head1 BUGS
 
-See http://thirdlobe.com/projects/poe-stage/report/1 for known issues.
-See http://thirdlobe.com/projects/poe-stage/newticket to report one.
+See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
+issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
+report one.
 
 =head1 SEE ALSO
 
-POE::Stage and POE::Request.  The examples/udp-peer.perl program in
-POE::Stage's distribution.
+L<POE::Stage> and L<POE::Request>.  The examples/udp-peer.perl program
+in POE::Stage's distribution.
 
 =head1 AUTHORS
 
@@ -185,7 +188,7 @@ Rocco Caputo <rcaputo@cpan.org>.
 
 =head1 LICENSE
 
-POE::Stage::Receiver is Copyright 2005 by Rocco Caputo.  All rights
+POE::Stage::Receiver is Copyright 2005-2006 by Rocco Caputo.  All rights
 are reserved.  You may use, modify, and/or distribute this module
 under the same terms as Perl itself.
 

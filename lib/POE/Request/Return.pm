@@ -1,4 +1,4 @@
-# $Id: Return.pm 55 2005-09-15 07:19:21Z rcaputo $
+# $Id: Return.pm 81 2006-07-08 22:11:46Z rcaputo $
 
 =head1 NAME
 
@@ -9,7 +9,7 @@ POE::Request::Return - encapsulates final replies to POE::Request messages
 	# Note, this is not a complete program.
 	# See the distribution's examples directory.
 
-	$poe_request_object->emit(
+	$poe_request_object->return(
 		type        => "failure",
 		args        => {
 			function  => "connect",
@@ -20,7 +20,7 @@ POE::Request::Return - encapsulates final replies to POE::Request messages
 
 =head1 DESCRIPTION
 
-A POE::Request::Return object is used to send a final response to a
+A POE::Request::Return message is used to send a final response to a
 request.  It is internally created and sent when a stage calls
 $self->{req}->return(...).  Part of return()'s purpose is to cancel
 the request it replies to, invalidating any further dialog associated
@@ -47,22 +47,23 @@ use base qw(POE::Request::Upward);
 
 sub _init_subclass {
 	my ($self, $current_request) = @_;
-	my $self_data = tied(%$self);
-	$self_data->[REQ_PARENT_REQUEST] = 0;
+	$self->[REQ_PARENT_REQUEST] = 0;
 }
 
 1;
 
 =head1 BUGS
 
-See http://thirdlobe.com/projects/poe-stage/report/1 for known issues.
-See http://thirdlobe.com/projects/poe-stage/newticket to report one.
+See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
+issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
+report one.
 
 =head1 SEE ALSO
 
 POE::Request::Return is comprised almost entirely of
-POE::Request::Upward's features.  You should see POE::Request::Upward
-for a deeper understanding of POE::Request::Return.
+POE::Request::Upward's features.  You should see
+L<POE::Request::Upward> for a deeper understanding of
+POE::Request::Return.
 
 =head1 AUTHORS
 
@@ -70,8 +71,8 @@ Rocco Caputo <rcaputo@cpan.org>.
 
 =head1 LICENSE
 
-POE::Request::Return is Copyright 2005 by Rocco Caputo.  All rights
-are reserved.  You may use, modify, and/or distribute this module
-under the same terms as Perl itself.
+POE::Request::Return is Copyright 2005-2006 by Rocco Caputo.  All
+rights are reserved.  You may use, modify, and/or distribute this
+module under the same terms as Perl itself.
 
 =cut

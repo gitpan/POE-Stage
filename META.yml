@@ -1,12 +1,18 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         POE-Stage
-version:      0.0055
-version_from: lib/POE/Stage.pm
-installdirs:  site
-requires:
-    POE:                           0.31
+--- #YAML:1.0
+name:                POE-Stage
+version:             0.0082
+abstract:            a prototype of a successor to POE::Component
+license:             unknown
+generated_by:        ExtUtils::MakeMaker version 6.30_01
+author:              Rocco Caputo <rcaputo@cpan.org>
+distribution_type:   module
+requires:     
+    Attribute::Handlers:           0.78
+    Net::DNS:                      0.53
+    PadWalker:                     1
+    POE:                           0.3502
+    Scalar::Util:                  1.18
     Test::More:                    0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.28
+meta-spec:
+    url: <http://module-build.sourceforge.net/META-spec-new.html>;
+    version: 1.1

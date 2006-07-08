@@ -1,4 +1,4 @@
-# $Id: Emit.pm 55 2005-09-15 07:19:21Z rcaputo $
+# $Id: Emit.pm 81 2006-07-08 22:11:46Z rcaputo $
 
 =head1 NAME
 
@@ -48,8 +48,7 @@ use base qw(POE::Request::Upward);
 
 sub _init_subclass {
 	my ($self, $current_request) = @_;
-	my $self_data = tied(%$self);
-	$self_data->[REQ_PARENT_REQUEST] = $current_request;
+	$self->[REQ_PARENT_REQUEST] = $current_request;
 }
 
 =head2 recall PAIRS
@@ -75,8 +74,7 @@ sub recall {
 	# Where does the message go?
 	# TODO - Have croak() reference the proper package/file/line.
 
-	my $self_data = tied(%$self);
-	my $parent_stage = $self_data->[REQ_CREATE_STAGE];
+	my $parent_stage = $self->[REQ_CREATE_STAGE];
 	unless ($parent_stage) {
 		confess "Cannot recall message: The requester is not a POE::Stage class";
 	}
@@ -89,7 +87,7 @@ sub recall {
 
 	# Reconstitute the parent's context.
 	my $parent_context;
-	my $parent_request = $self_data->[REQ_PARENT_REQUEST];
+	my $parent_request = $self->[REQ_PARENT_REQUEST];
 	croak "Cannot recall message: The requester has no context" unless (
 		$parent_request
 	);
@@ -105,12 +103,13 @@ sub recall {
 
 =head1 BUGS
 
-See http://thirdlobe.com/projects/poe-stage/report/1 for known issues.
-See http://thirdlobe.com/projects/poe-stage/newticket to report one.
+See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
+issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
+report one.
 
 =head1 SEE ALSO
 
-POE::Request, POE::Request::Recall, and probably POE::Stage.
+L<POE::Request>, L<POE::Request::Recall>, and probably L<POE::Stage>.
 
 =head1 AUTHORS
 
@@ -118,8 +117,8 @@ Rocco Caputo <rcaputo@cpan.org>.
 
 =head1 LICENSE
 
-POE::Request::Emit is Copyright 2005 by Rocco Caputo.  All rights are
-reserved.  You may use, modify, and/or distribute this module under
-the same terms as Perl itself.
+POE::Request::Emit is Copyright 2005-2006 by Rocco Caputo.  All rights
+are reserved.  You may use, modify, and/or distribute this module
+under the same terms as Perl itself.
 
 =cut
