@@ -1,4 +1,4 @@
-# $Id: Ticker.pm 81 2006-07-08 22:11:46Z rcaputo $
+# $Id: Ticker.pm 105 2006-09-23 18:12:07Z rcaputo $
 
 =head1 NAME
 
@@ -17,8 +17,8 @@ POE::Stage::Ticker - a periodic message generator for POE::Stage
 	);
 
 	sub handle_tick {
-		my ($self, $args) = @_;
-		print "Handled tick number $args->{id} in a series.\n";
+		my $id :Arg;
+		print "Handled tick number $id in a series.\n";
 	}
 
 =head1 DESCRIPTION
@@ -32,7 +32,7 @@ package POE::Stage::Ticker;
 use warnings;
 use strict;
 
-use base qw(POE::Stage);
+use POE::Stage qw(:base self req);
 
 use POE::Watcher::Delay;
 
@@ -46,30 +46,26 @@ Used to request the Ticker to start ticking.  The Ticker will emit a
 =cut
 
 sub start_ticking {
-	my ($self, $args) = @_;
-
 	# Since a single request can generate many ticks, keep a counter so
 	# we can tell one from another.
 
-	my $tick_id   :Req = 0;
-	my $interval  :Req = $args->{interval};
+	my $tick_id     :Req = 0;
+	my $my_interval :Req = my $interval :Arg;
 
-	$self->set_delay();
+	self->set_delay();
 }
 
 sub got_watcher_tick {
-	my ($self, $args) = @_;
-
 	# Note: We have received two copies of the tick interval.  One is
 	# from start_ticking() saving it in the request-scoped part of
 	# $self.  The other is passed to us in $args, through the
 	# POE::Watcher::Delay object.  We can use either one, but I thought
 	# it would be nice for testing and illustrative purposes to make
 	# sure they both agree.
-	die unless my $interval :Req == $args->{interval};
+	die unless my $my_interval :Req == my $interval :Arg;
 
 	my $tick_id :Req;
-	$self->{req}->emit(
+	req->emit(
 		type  => "tick",
 		args  => {
 			id  => ++$tick_id,
@@ -80,18 +76,16 @@ sub got_watcher_tick {
 	# again() method.  Meanwhile we just create a new delay object to
 	# replace the old one.
 
-	$self->set_delay();
+	self>set_delay();
 }
 
 sub set_delay {
-	my $self = shift;
-
-	my $interval :Req;
+	my $my_interval :Req;
 	my $delay :Req = POE::Watcher::Delay->new(
-		seconds     => $interval,
+		seconds     => $my_interval,
 		on_success  => "got_watcher_tick",
 		args        => {
-			interval  => $interval,
+			interval  => $my_interval,
 		},
 	);
 }
@@ -113,6 +107,11 @@ ticks from multiple tickers are not confused.
 See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
 issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
 report one.
+
+POE::Stage is too young for production use.  For example, its syntax
+is still changing.  You probably know what you don't like, or what you
+need that isn't included, so consider fixing or adding that.  It'll
+bring POE::Stage that much closer to a usable release.
 
 =head1 SEE ALSO
 

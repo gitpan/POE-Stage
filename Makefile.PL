@@ -1,4 +1,4 @@
-# $Id: Makefile.PL 83 2006-07-08 22:51:28Z rcaputo $
+# $Id: Makefile.PL 95 2006-08-13 20:37:54Z rcaputo $
 
 use ExtUtils::MakeMaker;
 
@@ -18,6 +18,7 @@ WriteMakefile(
 		Scalar::Util        => 1.18,
     POE                 => 0.3502,
     Test::More          => 0,
+		Devel::LexAlias     => 0.04,
   },
   dist         => {
     COMPRESS   => 'gzip -9f',

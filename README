@@ -9,15 +9,17 @@ SSYYNNOOPPSSIISS
                # Note, this is not a complete program.
                # See the distribution’s examples directory.
 
-               my $stage = POE::Stage::Subclass‐>new();
+               my $stage = POE::Stage::Subclass−>new();
 
-               my $request = POE::Request‐>new(
+               my $request = POE::Request−>new(
                        stage   => $stage,            # Invoke this stage
                        method  => "method_name",     # calling this method
                        args    => \%parameter_pairs, # with these parameters.
                );
 
 DDEESSCCRRIIPPTTIIOONN
+       TODO − This documentation is out of date.
+
        POE::Stage is a proposed base class for POE components.  Its purpose is
        to standardize the most common design patterns that have arisen through
        years of POE::Component development.
@@ -79,7 +81,7 @@ RREESSEERRVVEEDD MMEETTHHOODDSS
                sub some_handler {
                        my ($self, $args) = @_;
                        my $request_field :Req = "some value";
-                       my $sub_request :Req = POE::Request‐>new(
+                       my $sub_request :Req = POE::Request−>new(
                                ...,
                                on_xyz => "xyz_handler"
                        );
@@ -104,7 +106,7 @@ RREESSEERRVVEEDD MMEETTHHOODDSS
                sub some_other_handler {
                        my ($self, $args) = @_;
                        my $request_field :Req = "some value";
-                       my $sub_request :Req = POE::Request‐>new(
+                       my $sub_request :Req = POE::Request−>new(
                                ...,
                                on_xyz => "response_handler"
                        );
@@ -120,7 +122,7 @@ RREESSEERRVVEEDD MMEETTHHOODDSS
                }
 
        Three versions of _R_e_q_(_) are defined: One each for scalars, arrays, and
-       hashes.  You needn’t know this since the appropriate one will be used
+       hashes.  You need not know this since the appropriate one will be used
        depending on the type of variable declared.
 
 UUSSIINNGG
@@ -170,6 +172,11 @@ BBUUGGSS
        See http://thirdlobe.com/projects/poe−stage/report/1 for known issues.
        See http://thirdlobe.com/projects/poe−stage/newticket to report one.
 
+       POE::Stage is too young for production use.  For example, its syntax is
+       still changing.  You probably know what you don’t like, or what you
+       need that isn’t included, so consider fixing or adding that.  It’ll
+       bring POE::Stage that much closer to a usable release.
+
 SSEEEE AALLSSOO
        POE::Request is the class that defines inter‐stage messages.
        POE::Watcher is the base class for event watchers, without which
@@ -190,4 +197,4 @@ LLIICCEENNSSEE
 
 
 
-perl v5.8.6                       2006‐07‐08                     POE::Stage(3)
+perl v5.8.6                       2006‐09‐23                     POE::Stage(3)

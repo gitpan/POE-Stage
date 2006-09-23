@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: udp-peer.perl 79 2006-07-08 16:09:07Z rcaputo $
+# $Id: udp-peer.perl 99 2006-08-14 02:21:22Z rcaputo $
 
 # This is a second version of the UDP peer code.  I've abstracted the
 # original example into POE::Stage::Receiver.
@@ -15,12 +15,11 @@ use strict;
 	use warnings;
 	use strict;
 
-	use POE::Stage;
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base rsp);
 	use POE::Stage::Receiver;
 
 	sub run {
-		my ($self, $args) = @_;
+		my $bind_port :Arg;
 
 		# TODO - The next two statements seem unnecessarily cumbersome.
 		# What can be done to simplify them?
@@ -33,7 +32,7 @@ use strict;
 			on_recv_error => "handle_error",
 			on_send_error => "handle_error",
 			args          => {
-				bind_port   => $args->{bind_port},
+				bind_port   => $bind_port,
 			},
 		);
 
@@ -41,17 +40,16 @@ use strict;
 	}
 
 	sub handle_datagram {
-		my ($self, $args) = @_;
+		my ($datagram, $remote_address) :Arg;
 
-		my $datagram = $args->{datagram};
 		my $name :Rsp;
 		print "$name received datagram: $datagram\n";
 		$datagram =~ tr[a-zA-Z][n-za-mN-ZA-M];
 
-		$self->{rsp}->recall(
+		rsp->recall(
 			method            => "send",
 			args              => {
-				remote_address  => $args->{remote_address},
+				remote_address  => $remote_address,
 				datagram        => $datagram,
 			},
 		);

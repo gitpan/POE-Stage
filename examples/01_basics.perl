@@ -1,5 +1,5 @@
 #!perl
-# $Id: 01_basics.perl 84 2006-07-08 22:51:57Z rcaputo $
+# $Id: 01_basics.perl 99 2006-08-14 02:21:22Z rcaputo $
 
 # Simple call and return in POE::Stage.
 
@@ -14,13 +14,12 @@ use POE::Stage;
 
 	use warnings;
 	use strict;
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base self req);
 
 	sub do_something {
-		my ($self, $args) = @_;
-		print "Helper ($self) is executing a request.\n";
-		$self->{req}->emit(args => { value => "EmitValue123" });
-		$self->{req}->return(args => { value => "ReturnValueXyz" });
+		print "Helper (", self, ") is executing a request.\n";
+		req()->emit(args => { value => "EmitValue123" });
+		req()->return(args => { value => "ReturnValueXyz" });
 	}
 }
 
@@ -31,11 +30,9 @@ use POE::Stage;
 
 	use warnings;
 	use strict;
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base);
 
 	sub call_helper {
-		my $self = shift;
-
 		my $helper :Req = Helper->new();
 		my $helper_request :Req = POE::Request->new(
 			stage     => $helper,
@@ -55,11 +52,11 @@ use POE::Stage;
 	}
 
 	sub catch_return {
-		my ($self, $args) = @_;
+		my $value :Arg;
 		my ($helper, $helper_request, %hash, @array) :Req;
 		my $name :Rsp;
 		print(
-			"App return: return value '$args->{value}'\n",
+			"App return: return value '$value'\n",
 			"App return: $helper was called via $helper_request\n",
 			"App return: hash keys: ", join(" ", keys %hash), "\n",
 			"App return: hash values: ", join(" ", values %hash), "\n",
@@ -69,11 +66,11 @@ use POE::Stage;
 	}
 
 	sub catch_emit {
-		my ($self, $args) = @_;
+		my $value :Arg;
 		my ($helper, $helper_request, %hash, @array) :Req;
 		my $name :Rsp;
 		print(
-			"App emit: return value '$args->{value}'\n",
+			"App emit: return value '$value'\n",
 			"App emit: $helper was called via $helper_request\n",
 			"App emit: hash keys: ", join(" ", keys %hash), "\n",
 			"App emit: hash values: ", join(" ", values %hash), "\n",
@@ -97,3 +94,20 @@ my $req = POE::Request->new(
 
 POE::Kernel->run();
 exit;
+
+__END__
+
+App: Calling Helper=HASH(0x18d82fc) via POE::Request=ARRAY(0x181d03c)
+Helper (Helper=HASH(0x18d82fc)) is executing a request.
+App emit: return value 'EmitValue123'
+App emit: Helper=HASH(0x18d82fc) was called via POE::Request=ARRAY(0x181d03c)
+App emit: hash keys: abc xyz
+App emit: hash values: 123 890
+App emit: array: a e i o u y
+App emit: rsp name = test response context
+App return: return value 'ReturnValueXyz'
+App return: Helper=HASH(0x18d82fc) was called via POE::Request=ARRAY(0x181d03c)
+App return: hash keys: abc xyz
+App return: hash values: 123 890
+App return: array: a e i o u y
+App return: rsp: modified in catch_emit

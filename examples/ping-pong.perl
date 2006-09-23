@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: ping-pong.perl 79 2006-07-08 16:09:07Z rcaputo $
+# $Id: ping-pong.perl 99 2006-08-14 02:21:22Z rcaputo $
 
 # Illustrate the pattern of many one request per response, where each
 # response triggers another request.  This often leads to infinite
@@ -18,21 +18,19 @@ use strict;
 	use strict;
 
 	use POE::Stage::Echoer;
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base self);
 
 	sub run {
-		my ($self, $args) = @_;
-
 		my $echoer :Req = POE::Stage::Echoer->new();
 		my $i :Req = 1;
 
-		$self->send_request();
+		self->send_request();
 	}
 
 	sub got_echo {
-		my ($self, $args) = @_;
+		my $echo :Arg;
 
-		print "got echo: $args->{echo}\n";
+		print "got echo: $echo\n";
 
 		my $i :Req;
 		$i++;
@@ -41,12 +39,10 @@ use strict;
 		# for memory leaks.
 #		return if $i > 10;
 
-		$self->send_request();
+		self->send_request();
 	}
 
 	sub send_request {
-		my $self = shift;
-
 		my ($i, $echoer) :Req;
 		my $echo_request :Req = POE::Request->new(
 			stage     => $echoer,

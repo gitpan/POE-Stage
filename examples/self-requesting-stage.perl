@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: self-requesting-stage.perl 79 2006-07-08 16:09:07Z rcaputo $
+# $Id: self-requesting-stage.perl 99 2006-08-14 02:21:22Z rcaputo $
 
 # Create a very simple stage that performs a task and returns a
 # mesage.  The magic here is that the stage makes its own request in
@@ -10,7 +10,7 @@
 	package SelfRequester;
 	use warnings;
 	use strict;
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base self);
 	use POE::Watcher::Delay;
 
 	# My first try was to set a delay in init(), but the delay never
@@ -33,11 +33,12 @@
 	# too much ugliness.
 
 	sub init {
-		my ($self, $args) = @_;
+		my $args = $_[1];
+
 		warn 0;
 		my $passthrough_args = delete $args->{args} || {};
-		$self->{request} = POE::Request->new(
-			stage   => $self,
+		my $auto_request :Self = POE::Request->new(
+			stage   => self,
 			method  => "set_thingy",
 			%$args,
 			args    => { %$passthrough_args },
@@ -45,24 +46,24 @@
 	}
 
 	sub set_thingy {
-		my ($self, $args) = @_;
+		my $seconds :Arg;
 		warn 1;
 
 		my $delay :Req = POE::Watcher::Delay->new(
-			seconds     => $args->{seconds},
+			seconds     => $seconds,
 			on_success  => "time_is_up",
 		);
 	}
 
 	sub time_is_up {
-		my ($self, $args) = @_;
+		my $auto_request :Self;
 		warn 2;
-		$self->{req}->return(
+		$auto_request->return(
 			type => "done",
 		);
 
 		# Don't need to delete these as long as the request is canceled,
-		# either by calling $self->{req}->return() on ->cancel().
+		# either by calling req->return() on ->cancel().
 		#delete $self->{request};
 		#my $delay :Req = undef;
 	}
@@ -72,22 +73,19 @@
 	package App;
 	use warnings;
 	use strict;
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base self);
 
 	sub run {
-		my ($self, $args) = @_;
 		warn 3;
-		$self->spawn_requester();
+		self->spawn_requester();
 	}
 
 	sub do_again {
-		my ($self, $args) = @_;
 		warn 4;
-		$self->spawn_requester();
+		self->spawn_requester();
 	}
 
 	sub spawn_requester {
-		my $self = shift;
 		warn 5;
 
 		my $self_requester :Req = SelfRequester->new(

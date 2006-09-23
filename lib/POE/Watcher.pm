@@ -1,4 +1,4 @@
-# $Id: Watcher.pm 81 2006-07-08 22:11:46Z rcaputo $
+# $Id: Watcher.pm 105 2006-09-23 18:12:07Z rcaputo $
 
 package POE::Watcher;
 
@@ -58,6 +58,11 @@ parameters to create another POE::Kernel resource.
 See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
 issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
 report one.
+
+POE::Stage is too young for production use.  For example, its syntax
+is still changing.  You probably know what you don't like, or what you
+need that isn't included, so consider fixing or adding that.  It'll
+bring POE::Stage that much closer to a usable release.
 
 =head1 SEE ALSO
 

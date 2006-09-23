@@ -1,4 +1,4 @@
-# $Id: Request.pm 82 2006-07-08 22:47:24Z rcaputo $
+# $Id: Request.pm 105 2006-09-23 18:12:07Z rcaputo $
 
 =head1 NAME
 
@@ -25,7 +25,7 @@ POE::Request - a common message class for POE::Stage
 		print "$args->{param_1}\n";  # 123
 		print "$args->{param_2}\n";  # abc
 		...;
-		$self->{req}->return( type => "one", moo => "retval" );
+		req()->return( type => "one", moo => "retval" );
 	}
 
 	# Handle one's return value.
@@ -127,7 +127,7 @@ BEGIN {
 	);
 }
 
-use POE::Stage::TiedAttributes qw(REQUEST RESPONSE);
+use POE::Stage::TiedAttributes;
 
 my $last_request_id = 0;
 my %active_request_ids;
@@ -216,12 +216,16 @@ sub _push {
 sub _invoke {
 	my ($self, $method, $override_args) = @_;
 
-	DEBUG and warn(
-		"\t$self invoking $self->[REQ_TARGET_STAGE] method $method:\n",
-		"\t\tMy req  = $self->[REQ_TARGET_STAGE]{req}\n",
-		"\t\tMy rsp  = $self->[REQ_TARGET_STAGE]{rsp}\n",
-		"\t\tPar req = $self->[REQ_PARENT_REQUEST]\n",
-	);
+	DEBUG and do {
+		my $tied_target = tied(%{$self->[REQ_TARGET_STAGE]});
+
+		warn(
+			"\t$self invoking $self->[REQ_TARGET_STAGE] method $method:\n",
+			"\t\tMy req  = ", $tied_target->_get_request(), "\n",
+			"\t\tMy rsp  = ", $tied_target->_get_respones(), "\n",
+			"\t\tPar req = $self->[REQ_PARENT_REQUEST]\n",
+		);
+	};
 
 	$self->[REQ_TARGET_STAGE]->$method(
 		$override_args || $self->[REQ_ARGS]
@@ -397,11 +401,11 @@ sub deliver {
 	my ($self, $method, $override_args) = @_;
 
 	my $target_stage = $self->[REQ_TARGET_STAGE];
-	my $target_stage_data = tied(%$target_stage);
+	my $target_stage_tied = tied(%$target_stage);
 
 	my $delivery_req = $self->[REQ_DELIVERY_REQ] || $self;
-	$target_stage_data->[REQUEST]  = $delivery_req;
-	$target_stage_data->[RESPONSE] = 0;
+
+	$target_stage_tied->_set_req_rsp($delivery_req, 0);
 
 	my $target_method = $method || $self->[REQ_TARGET_METHOD];
 	$self->_push($self, $target_stage, $target_method);
@@ -410,11 +414,7 @@ sub deliver {
 
 	$self->_pop($self, $target_stage, $target_method);
 
-	my $old_rsp = delete $target_stage_data->[RESPONSE];
-	my $old_req = delete $target_stage_data->[REQUEST];
-
-#	die "bad rsp" unless $old_rsp == 0;
-#	die "bad req" unless $old_req == $delivery_req;
+	$target_stage_tied->_set_req_rsp(undef, undef);
 }
 
 # Return a response to the requester.  The response occurs in the
@@ -588,6 +588,11 @@ See http://thirdlobe.com/projects/poe-stage/newticket to report one.
 
 C<:Req> and C<:Rsp> must be discussed in greater detail, perhaps in
 one or more tutorials.
+
+POE::Stage is too young for production use.  For example, its syntax
+is still changing.  You probably know what you don't like, or what you
+need that isn't included, so consider fixing or adding that.  It'll
+bring POE::Stage that much closer to a usable release.
 
 =head1 SEE ALSO
 

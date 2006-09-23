@@ -1,4 +1,4 @@
-# $Id: TiedAttributes.pm 81 2006-07-08 22:11:46Z rcaputo $
+# $Id: TiedAttributes.pm 105 2006-09-23 18:12:07Z rcaputo $
 
 =head1 NAME
 
@@ -13,9 +13,6 @@ POE::Stage::TiedAttributes - implements magic "req" and "rsp" members
 POE::Stage::TiedAttributes implements a large chunk of POE::Stage's
 magical data scopes.
 
-It manages the special $self->{req} and $self->{rsp} fields.  They
-will always point to the proper POE::Request objects.
-
 It holds request-scoped data, which is really stage-scoped data
 associated with the request.
 
@@ -25,6 +22,9 @@ are canceled.
 It does these things as automatically as possible.
 
 =head2 POE::Stage's "req" Data Member
+
+TODO - Does not exist.  Was replaced by POE::Stage's req() export.
+Move this wonderful description there.
 
 Every POE::Stage object has two read-only data members: req and rsp.
 The req data member refers to the POE::Request object that the stage
@@ -75,6 +75,9 @@ up the request chain.
 
 =head2 POE::Stage's "rsp" Data Member
 
+TODO - Does not exist.  Was replaced by POE::Stage's rsp() export.
+Move this wonderful description there.
+
 The special $self->{rsp} data member refers to responses to requests
 made by a stage.  It's only valid when a response handler is currently
 executing.  Here a response object is used to re-call a sub-stage in
@@ -107,13 +110,6 @@ sub REQUEST       () { 3 }  # Currently active request.
 sub RESPONSE      () { 4 }  # Currently active response.
 sub REQ_CONTEXTS  () { 5 }  # Contexts for each request in play.
 
-use Exporter;
-use base qw(Exporter);
-@POE::Stage::TiedAttributes::EXPORT_OK = qw(
-	REQUEST
-	RESPONSE
-);
-
 sub TIEHASH {
 	my $class = shift;
 	my $self = bless [
@@ -127,62 +123,41 @@ sub TIEHASH {
 	return $self;
 }
 
-sub STORE {
+sub _get_request { return $_[0][REQUEST] }
+sub _get_response { return $_[0][RESPONSE] }
+sub _set_req_rsp { $_[0][REQUEST] = $_[1]; $_[0][RESPONSE] = $_[2] }
+
+# We don't support direct self access anymore.  All access goes
+# through :Self attributes instead.
+
+sub STORE     { croak "storing directly to a stage";    }
+sub FETCH     { croak "fetching directly from a stage"; }
+sub FIRSTKEY  { croak "firstkey directly from a stage"; }
+sub NEXTKEY   { croak "nextkey directly from a stage";  }
+sub EXISTS    { croak "exists directly from a stage";   }
+sub DELETE    { croak "delete directly from a stage";   }
+
+### Helper for :Self members.
+
+sub _self_store {
 	my ($self, $key, $value) = @_;
-
-	# For debugging during the transition from $stage->{req_foo} to
-	# $stage->{req}{foo} syntax.
-	if ($key =~ s/^(req|rsp)_//) {
-		croak "Use :Req or :Rsp attributes instead";
-	}
-
-	croak "$key is a read-only data member" if $key eq "req" or $key eq "rsp";
 	return $self->[STAGE_DATA]{$key} = $value;
 }
 
-sub FETCH {
+sub _self_fetch {
 	my ($self, $key) = @_;
-	return $self->[REQUEST]  if $key eq "req";
-	return $self->[RESPONSE] if $key eq "rsp";
 	return $self->[STAGE_DATA]{$key};
 }
 
-sub FIRSTKEY {
-	my $self = shift;
-
-	my @keys;
-
-	{ my $a = keys %{$self->[STAGE_DATA]};
-		push @keys, keys %{$self->[STAGE_DATA]};
-	}
-
-	push @keys, "req" if $self->[REQUEST];
-	push @keys, "rsp" if $self->[RESPONSE];
-
-	$self->[COMBINED_KEYS] = [ sort @keys ];
-	return shift @{$self->[COMBINED_KEYS]};
-}
-
-sub NEXTKEY {
-	my $self = shift;
-	return shift @{$self->[COMBINED_KEYS]};
-}
-
-sub EXISTS {
+sub _self_exists {
 	my ($self, $key) = @_;
-	return defined $self->[REQUEST]  if $key eq "req";
-	return defined $self->[RESPONSE] if $key eq "rsp";
 	return exists $self->[STAGE_DATA]{$key};
 }
 
-sub DELETE {
-	my ($self, $key) = @_;
-	croak "$key is a read-only data member" if $key eq "req" or $key eq "rsp";
-	return delete $self->[STAGE_DATA]{$key};
-}
+### Helpers for :Req members.
 
 sub _request_context_store {
-	my ($self, $req_id,$key, $value) = @_;
+	my ($self, $req_id, $key, $value) = @_;
 	return $self->[REQ_CONTEXTS]{$req_id}{$key} = $value;
 }
 
@@ -229,6 +204,11 @@ data members.  It is indirectly used by POE::Request as well.
 See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
 issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
 report one.
+
+POE::Stage is too young for production use.  For example, its syntax
+is still changing.  You probably know what you don't like, or what you
+need that isn't included, so consider fixing or adding that.  It'll
+bring POE::Stage that much closer to a usable release.
 
 =head1 SEE ALSO
 

@@ -1,4 +1,4 @@
-# $Id: Recall.pm 81 2006-07-08 22:11:46Z rcaputo $
+# $Id: Recall.pm 105 2006-09-23 18:12:07Z rcaputo $
 
 =head1 NAME
 
@@ -9,7 +9,7 @@ POE::Request::Recall - encapsulates responses to POE::Request::Emit
 	# Note, this is not a complete program.
 	# See the distribution's examples directory.
 
-	$self->{rsp}->recall(
+	rsp()->recall(
 		method  => "method_name",     # invoke this method on Emit's creator
 		args      => {
 			param_1 => 123,               # with this parameter
@@ -33,9 +33,9 @@ Consider this persistent dialogue between two stages:
 	Requester               Servicer
 	----------------------- -------------------------
 	POE::Request->new()     .
-	.                       $self->{req}->emit()
-	$self->{rsp}->recall()  .
-	.                       $self->{req}->return()
+	.                       req()->emit()
+	rsp()->recall()  .
+	.                       req()->return()
 
 A stage requests a service from another stage.  The servicer stage
 emits a response, which is handled by the requester.  The requester
@@ -91,7 +91,8 @@ sub new {
 	confess "should always have a current request" unless $current_request;
 
 	# Current RSP is a POE::Request::Emit.
-	my $current_rsp = $current_request->[REQ_TARGET_STAGE]{rsp};
+	my $tied_target = tied(%{$current_request->[REQ_TARGET_STAGE]});
+	my $current_rsp = $tied_target->_get_response();
 	confess "should always have a current rsp" unless $current_rsp;
 
 	# Recall's parent is RSP's delivery REQ.
@@ -145,6 +146,11 @@ sub recall {
 See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
 issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
 report one.
+
+POE::Stage is too young for production use.  For example, its syntax
+is still changing.  You probably know what you don't like, or what you
+need that isn't included, so consider fixing or adding that.  It'll
+bring POE::Stage that much closer to a usable release.
 
 =head1 SEE ALSO
 

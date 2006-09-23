@@ -1,4 +1,4 @@
-# $Id: Echoer.pm 81 2006-07-08 22:11:46Z rcaputo $
+# $Id: Echoer.pm 105 2006-09-23 18:12:07Z rcaputo $
 
 =head1 NAME
 
@@ -22,8 +22,8 @@ POE::Stage::Echoer - a stage that echoes back whatever it's given
 	);
 
 	sub handle_echo {
-		my ($self, $args) = @_;
-		print "Received an echo: $args->{echo}\n";
+		my $echo :Arg;
+		print "Received an echo: $echo\n";
 	}
 
 =head1 DESCRIPTION
@@ -44,7 +44,7 @@ package POE::Stage::Echoer;
 use warnings;
 use strict;
 
-use base qw(POE::Stage);
+use POE::Stage qw(:base req);
 
 =head1 PUBLIC COMMANDS
 
@@ -60,12 +60,11 @@ message.
 =cut
 
 sub echo {
-	my ($self, $args) = @_;
-
-	$self->{req}->return(
+	my $message :Arg;
+	req->return(
 		type    => "echo",
 		args    => {
-			echo  => $args->{message},
+			echo  => $message,
 		},
 	);
 }
@@ -85,6 +84,11 @@ The echo is passed in the "echo" parameter to the "echo" response.
 
 See http://thirdlobe.com/projects/poe-stage/report/1 for known issues.
 See http://thirdlobe.com/projects/poe-stage/newticket to report one.
+
+POE::Stage is too young for production use.  For example, its syntax
+is still changing.  You probably know what you don't like, or what you
+need that isn't included, so consider fixing or adding that.  It'll
+bring POE::Stage that much closer to a usable release.
 
 =head1 SEE ALSO
 

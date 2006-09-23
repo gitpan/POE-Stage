@@ -1,4 +1,4 @@
-# $Id: Resolver.pm 81 2006-07-08 22:11:46Z rcaputo $
+# $Id: Resolver.pm 105 2006-09-23 18:12:07Z rcaputo $
 
 =head1 NAME
 
@@ -51,7 +51,7 @@ package POE::Stage::Resolver;
 use warnings;
 use strict;
 
-use base qw(POE::Stage);
+use POE::Stage qw(:base self req);
 use POE::Watcher::Delay;
 use Net::DNS::Resolver;
 use POE::Watcher::Input;
@@ -72,53 +72,52 @@ When complete, the stage will return either a "success" or an "error".
 =cut
 
 sub init {
-	my ($self, $args) = @_;
+	# TODO - Need an idiom to avoid direct $_[1] manipulation.
 
 	# Fire off a request automatically as part of creation.
-	my $passthrough_args = delete($args->{args}) || {};
-	$self->{init_req} = POE::Request->new(
-		stage   => $self,
+	my $passthrough_args = delete($_[1]{args}) || {};
+
+	my $init_req :Req = POE::Request->new(
+		stage   => self,
 		method  => "resolve",
-		%$args,
+		%{$_[1]},
 		args    => { %$passthrough_args },
 	);
 
-	$self->{resolver} = Net::DNS::Resolver->new();
+	my $resolver :Self = Net::DNS::Resolver->new();
 }
 
 sub resolve {
-	my ($self, $args) = @_;
+	my $my_type :Self = my $type :Arg; $my_type ||= "A";
+	my $my_class :Self = my $class :Arg; $my_class ||= "IN";
+	my $my_input :Self = my $input :Arg;
+	$my_input || croak "Resolver requires input";
 
-	$self->{type}  = $args->{type} || "A";
-	$self->{class} = $args->{class} || "IN";
-	$self->{input} = $args->{input} || croak "Resolver requires input";
-
-	my $resolver_socket = $self->{resolver}->bgsend(
-		$self->{input},
-		$self->{type},
-		$self->{class},
+	my $resolver :Self;
+	my $socket :Self = $resolver->bgsend(
+		$my_input,
+		$my_type,
+		$my_class,
 	);
 
-	$self->{socket} = $resolver_socket;
-
-	$self->{wait_for_it} = POE::Watcher::Input->new(
-		handle    => $resolver_socket,
+	my $wait_for_it :Self = POE::Watcher::Input->new(
+		handle    => $socket,
 		on_input  => "net_dns_ready_to_read",
 	);
 }
 
 sub net_dns_ready_to_read {
-	my ($self, $args) = @_;
 
-	my $socket = $self->{socket};
-	my $packet = $self->{resolver}->bgread($socket);
+	my ($socket, $resolver) :Self;
+	my $packet = $resolver->bgread($socket);
 
+	my $my_input :Self;
 	unless (defined $packet) {
-		$self->{req}->return(
+		req->return(
 			type    => "error",
 			args    => {
-				input => $self->{input},
-				error => $self->{resolver}->errorstring(),
+				input => $my_input,
+				error => $resolver->errorstring(),
 			}
 		);
 		return;
@@ -133,10 +132,10 @@ sub net_dns_ready_to_read {
 		}
 	}
 
-	$self->{req}->return(
+	req->return(
 		type      => "success",
 		args      => {
-			input   => $self->{input},
+			input   => $my_input,
 			packet  => $packet,
 		},
 	);
@@ -176,6 +175,11 @@ parameter.  Net::DNS::Resolver's error message comes back as "error".
 See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
 issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
 report one.
+
+POE::Stage is too young for production use.  For example, its syntax
+is still changing.  You probably know what you don't like, or what you
+need that isn't included, so consider fixing or adding that.  It'll
+bring POE::Stage that much closer to a usable release.
 
 =head1 SEE ALSO
 

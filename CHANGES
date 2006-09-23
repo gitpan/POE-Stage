@@ -1,3 +1,159 @@
+============================
+2006-09-23 18:14:57 v0_01_00
+============================
+
+  2006-09-23 18:13:50 (r106) by rcaputo; lib/POE/Stage.pm M
+
+    Switch to manually selected version numbers. And make it 0.01_00. 
+
+  2006-09-23 18:12:07 (r105) by rcaputo
+  lib/POE/Request/Upward.pm M; lib/POE/Request/Recall.pm M;
+  lib/POE/Watcher/Delay.pm M; lib/POE/Watcher/Input.pm M;
+  lib/POE/Watcher.pm M; lib/POE/Stage/TiedAttributes.pm M;
+  lib/POE/Watcher/Wheel.pm M; lib/POE/Stage.pm M;
+  lib/POE/Stage/Resolver.pm M; lib/POE/Watcher/Wheel/Run.pm M;
+  lib/POE/Stage/Receiver.pm M; lib/POE/Request/Return.pm M;
+  lib/POE/Stage/Echoer.pm M; lib/POE/Watcher/Wheel/SocketFactory.pm M;
+  lib/POE/Stage/Ticker.pm M; lib/POE/Request/Emit.pm M;
+  lib/POE/Watcher/Wheel/ReadWrite.pm M; lib/POE/Request.pm M
+
+    Add a note about the distribution's not-ready-for-primetime-ness to
+    the BUGS section of each module. 
+
+  2006-09-05 23:41:37 (r104) by hdp
+  lib/POE/Watcher/Wheel/SocketFactory.pm A
+
+    [push @ 4225f28a9441002fb4fa39af374b4518a1798017] SocketFactory
+    watcher
+    
+    Original author: Hans Dieter Pearcey <hdp@vex.pobox.com> Date:
+    2006-09-06 03:41:48
+
+  2006-09-05 15:14:37 (r103) by hdp
+  lib/POE/Watcher/Wheel.pm M; lib/POE/Watcher/Wheel/Run.pm M
+
+    [push @ f0af741f1192328143b6bdd8aaf787179ab0fb31] refactoring wheel_*
+    from Run to the base class, using Class::Data::Inheritable
+    
+    Original author: Hans Dieter Pearcey <hdp@vex.pobox.com> Date:
+    2006-09-05 18:50:56
+
+  2006-09-05 15:14:32 (r102) by hdp; lib/POE/Watcher/Wheel/ReadWrite.pm A
+
+    [push @ 705e36aac0c42042fa8b66a7e796997b439d1d7a] working ReadWrite
+    watcher
+    
+    Original author: Hans Dieter Pearcey <hdp@vex.pobox.com> Date:
+    2006-09-05 18:48:42
+
+  2006-09-05 01:54:13 (r101) by rcaputo; PATTERNS M
+
+    Clarify some notes after a discussion with Dieter. 
+
+  2006-08-14 03:13:27 (r100) by rcaputo; examples/attributes.perl A
+
+    Totally comment up this example as a tutorial explaining WTF?! is
+    going on with attributes and scopes and stuff. 
+
+  2006-08-14 02:21:22 (r99) by rcaputo
+  examples/self-requesting-stage.perl M; lib/POE/Request/Upward.pm M;
+  examples/log-resolver.perl M; examples/udp-peer.perl M;
+  examples/many-responses.perl M; lib/POE/Stage/TiedAttributes.pm M;
+  lib/POE/Stage.pm M; lib/POE/Stage/Resolver.pm M;
+  examples/tcp-server.perl M; lib/POE/Stage/Receiver.pm M;
+  lib/POE/Stage/Echoer.pm M; examples/ping-pong.perl M;
+  examples/01_basics.perl M; examples/wheel-run.perl M;
+  lib/POE/Stage/Ticker.pm M; t/01_all_call_types.t M; lib/POE/Request.pm
+  M
+
+    Replace POE::Stage's Exporter import() with a custom one. The custom
+    one honors :base, which mucks with the caller's @ISA to add
+    POE::Stage as a base class for the user's.
+    
+    Also removed POE::Stage::TiedAttributes' exporter magic for REQUEST
+    and RESPONSE. Everybody gets to use methods rather than reaching into
+    the implementation from outside. Much better this way, even if it's a
+    little slower. 
+
+  2006-08-14 00:58:23 (r98) by rcaputo
+  lib/POE/Stage/TiedAttributes.pm M; lib/POE/Stage.pm M
+
+    Remove the last vestiges of direct $self->{member} access. The new
+    attribute and sub syntax works fine here. 
+
+  2006-08-14 00:38:16 (r97) by rcaputo
+  examples/self-requesting-stage.perl M; lib/POE/Request/Recall.pm M;
+  examples/log-resolver.perl M; examples/udp-peer.perl M;
+  examples/many-responses.perl M; lib/POE/Stage/TiedAttributes.pm M;
+  lib/POE/Stage.pm M; lib/POE/Stage/Resolver.pm M;
+  examples/tcp-server.perl M; lib/POE/Stage/Receiver.pm M;
+  lib/POE/Stage/Echoer.pm M; examples/ping-pong.perl M;
+  examples/01_basics.perl M; lib/POE/Stage/Ticker.pm M;
+  t/01_all_call_types.t M; lib/POE/Request.pm M
+
+    Make self(), req() and rsp() for calling methods. Modify the
+    attributes so that :Self is self's data members, and :Req and :Rsp
+    are request and response data members, respectively. :Arg remains
+    argumentative. 
+
+  2006-08-13 21:23:44 (r96) by rcaputo
+  MANIFEST M; lib/POE/Stage.pm M; lib/POE/Attribute D
+
+    Replace the tied POE::Attribute classes with Devel::LexAlias. 
+
+  2006-08-13 20:37:54 (r95) by rcaputo
+  lib/POE/Member D; MANIFEST M; Makefile.PL M; lib/POE/Stage.pm M
+
+    Replace the POE::Member tied redirects with Devel::LexAlias. A big
+    shout out to Matt S. Trout for pointing me at a wheel I was
+    reinventing poorly: Catalyst::Controller::BindLex. 
+
+  2006-08-12 07:25:53 (r94) by rcaputo
+  examples/ping-pong.perl M; examples/self-requesting-stage.perl M;
+  examples/log-resolver.perl M; examples/udp-peer.perl M;
+  examples/many-responses.perl M; examples/01_basics.perl M;
+  examples/wheel-run.perl M; examples/tcp-server.perl M
+
+    Upgrade the examples for the new :Self, :Arg, and :Memb attributes.
+    Some issues arose from this: Argument filtering and hoisting need
+    access to $args directly (for deleting). The "request" and "response"
+    members aren't necessary---they may be attributes---but for now we
+    still must access them via $self->{req} because they don't have
+    sigils like the :Memb system uses internally. 
+
+  2006-08-12 07:23:58 (r93) by rcaputo; lib/POE/Stage.pm M
+
+    Add handlers for :Arg, :Memb, and :Self. 
+
+  2006-08-12 07:23:07 (r92) by rcaputo
+  lib/POE/Member/Hash.pm A; lib/POE/Member A; lib/POE/Member/Scalar.pm A;
+  MANIFEST M; lib/POE/Member/Array.pm A
+
+    Add classes for tied Stage members. 
+
+  2006-08-12 07:20:50 (r91) by rcaputo
+  lab/SweetAtUnder.pm M; lab/sweet-at-under.perl M
+
+    Add proofs of concept for attributes to tie members. 
+
+  2006-08-12 06:38:51 (r90) by rcaputo
+  lib/POE/Attribute/Request/Array.pm M
+
+    Fix a reference error in PUSH. 
+
+  2006-08-09 15:51:45 (r89) by rcaputo; lab/sweet-at-under.perl M
+
+    Add some sample output. 
+
+  2006-08-09 15:31:32 (r88) by rcaputo
+  lab/SweetAtUnder.pm A; lab/sweet-at-under.perl A
+
+    Add an experiment to replace @_ use with scalar attributes. 
+
+  2006-07-08 23:18:54 (r87) by rcaputo; examples/01_basics.perl M
+
+    Append sample output to the basics example. 
+
 ===========================
 2006-07-08 23:00:45 v0_0082
 ===========================

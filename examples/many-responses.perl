@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: many-responses.perl 79 2006-07-08 16:09:07Z rcaputo $
+# $Id: many-responses.perl 99 2006-08-14 02:21:22Z rcaputo $
 
 # Illustrate the pattern of many responses for one request.
 
@@ -15,38 +15,39 @@ use strict;
 	use strict;
 
 	use POE::Stage::Ticker;
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base self);
 
 	sub init {
-		my ($self, $args) = @_;
-		$self->{name} = $args->{name};
+		my $name :Arg;
+		my $my_name :Self = $name;
 	}
 
 	sub run {
-		my ($self, $args) = @_;
+		my ($name, $interval) :Arg;
 
 		my $ticker :Req   = POE::Stage::Ticker->new();
-		my $name :Req     = $args->{name} || "unnamed";
-		my $interval :Req = $args->{interval} || 0.001;
+		my $req_name :Req = $name || "unnamed";
+		my $req_interval :Req = $interval || 0.001;
 
 		my $ticker_request :Req = POE::Request->new(
 			stage       => $ticker,
 			method      => "start_ticking",
 			on_tick     => "handle_tick",
 			args        => {
-				interval  => $interval,
+				interval  => $req_interval,
 			},
 		);
 	}
 
 	sub handle_tick {
-		my ($self, $args) = @_;
-		my $name :Req;
+		my $id :Arg;
+		my $req_name :Req;
+		my $my_name :Self;
 
 		print(
-			"app($self->{name}) ",
-			"request($name) ",
-			"handled tick $args->{id}\n"
+			"app($my_name) ",
+			"request($req_name) ",
+			"handled tick $id\n"
 		);
 	}
 }

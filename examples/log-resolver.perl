@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: log-resolver.perl 79 2006-07-08 16:09:07Z rcaputo $
+# $Id: log-resolver.perl 99 2006-08-14 02:21:22Z rcaputo $
 
 # Resolve IP addresses in log files into their hosts, in some number
 # of parallel requests.  This example exercises the system's ability
@@ -14,26 +14,22 @@ use strict;
 	use warnings;
 	use strict;
 
-	use base qw(POE::Stage);
+	use POE::Stage qw(:base self);
 	use POE::Stage::Resolver;
 
 	sub run {
-		my ($self, $args) = @_;
 
 		# Start a handful of initial requests.
 		for (1..5) {
 			my $next_address = read_next_address();
 			last unless defined $next_address;
 
-			$self->resolve_address($next_address);
+			self->resolve_address($next_address);
 		}
 	}
 
 	sub handle_host {
-		my ($self, $args) = @_;
-
-		my $input = $args->{input};
-		my $packet = $args->{packet};
+		my ($input, $packet) :Arg;
 
 		my @answers = $packet->answer();
 		foreach my $answer (@answers) {
@@ -49,18 +45,16 @@ use strict;
 		# in void context, the framework could hold onto the stage until
 		# it it called return() or cancel().  Then the framework frees it.
 
-		$self->resolve_address(read_next_address());
+		self->resolve_address(read_next_address());
 	}
 
 	# Handle some error.
 	sub handle_error {
-		my ($self, $args) = @_;
-		my $input = $args->{input};
-		my $error = $args->{error};
+		my ($input, $error) :Args;
 
 		print "Error: $input = $error\n";
 
-		$self->resolve_address(read_next_address());
+		self->resolve_address(read_next_address());
 	}
 
 	# Plain old subroutine.  Doesn't handle events.
