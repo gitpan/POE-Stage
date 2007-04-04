@@ -1,4 +1,4 @@
-# $Id: Makefile.PL 95 2006-08-13 20:37:54Z rcaputo $
+# $Id: Makefile.PL 135 2006-11-18 23:48:36Z rcaputo $
 
 use ExtUtils::MakeMaker;
 
@@ -10,22 +10,24 @@ WriteMakefile(
   NAME         => 'POE::Stage',
   AUTHOR       => 'Rocco Caputo <rcaputo@cpan.org>',
   ABSTRACT     => 'a prototype of a successor to POE::Component',
+  LICENSE      => 'perl',
   VERSION_FROM => 'lib/POE/Stage.pm',
   PREREQ_PM    => {
-		Attribute::Handlers => 0.78,
-		Net::DNS            => 0.53,
-		PadWalker           => 1.0,
-		Scalar::Util        => 1.18,
-    POE                 => 0.3502,
-    Test::More          => 0,
-		Devel::LexAlias     => 0.04,
+    'Attribute::Handlers'   => 0.78,
+    'Net::DNS'              => 0.53,
+    'PadWalker'             => 1.0,
+    'Scalar::Util'          => 1.18,
+    'POE'                   => 0.3502,
+    'Test::More'            => 0,
+    'Devel::LexAlias'       => 0.04,
+		'Lexical::Persistence'  => 0.95, # Currently unused.
   },
   dist         => {
     COMPRESS   => 'gzip -9f',
     SUFFIX     => 'gz',
     PREOP      => (
       'svn-log.perl | tee ./$(DISTNAME)-$(VERSION)/CHANGES > ./CHANGES;' .
-			'perldoc lib/POE/Stage.pm > README'
+      'perldoc lib/POE/Stage.pm > README'
     ),
   },
 );

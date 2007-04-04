@@ -1,54 +1,40 @@
 #!/usr/bin/perl
-# $Id: wheel-run.perl 99 2006-08-14 02:21:22Z rcaputo $
+# $Id: wheel-run.perl 146 2007-01-07 06:51:22Z rcaputo $
 
 # Attempt to use POE::Watcher::Wheel to encapsulate POE::Wheel::Run.
 
 {
 	package App;
-	use warnings;
-	use strict;
-
 	use lib qw(./lib ../lib);
-	use POE::Stage qw(:base);
+	use POE::Stage::App qw(:base);
 	use POE::Watcher::Wheel::Run;
 	use POE::Filter::Line;
 
-	sub run {
-		my $process :Req = POE::Watcher::Wheel::Run->new(
+	sub on_run :Handler {
+		my $req_process = POE::Watcher::Wheel::Run->new(
 			Program      => "$^X -wle 'print qq[pid(\$\$) moo(\$_)] for 1..10; exit'",
 			StdoutMethod => "handle_stdout",
 			CloseMethod  => "handle_close",
 		);
 	}
 
-	sub handle_stdout {
+	sub handle_stdout :Handler {
 		my $args = $_[1];
 		use YAML;
 		warn YAML::Dump($args);
 	}
 
-	sub handle_close {
+	sub handle_close :Handler {
 		warn "process closed";
-		my $process :Req = undef;
+		my $req_process = undef;
 	}
 }
 
 package main;
-use warnings;
-use strict;
 
-my $app = App->new();
-my $req = POE::Request->new(
-	stage   => $app,
-	method  => "run",
-);
-
-# Trap SIGINT and make it exit gracefully.  Problems in destructor
-# timing will become apparent when warnings in them say "during global
-# destruction."
-
+# Avoid POE messages:
+# !!! Child process PID:20840 reaped:
 $SIG{CHLD} = "IGNORE";
-$SIG{INT} = sub { warn "sigint"; exit };
 
-POE::Kernel->run();
+App->new()->run();
 exit;

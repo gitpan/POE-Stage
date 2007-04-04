@@ -1,5 +1,13 @@
 #!/usr/bin/perl
-# $Id: self-requesting-stage.perl 99 2006-08-14 02:21:22Z rcaputo $
+# $Id: self-requesting-stage.perl 147 2007-01-21 07:57:35Z rcaputo $
+
+die(
+	"* For consistency, on_init(), aka init(), is called in the new\n",
+	"* object's context rather than the creator's context.  Therefore\n",
+	"* it cannot successfully create requests on the creator's behalf.\n",
+	"* Self-requesting stages may be brought back in the future, but\n",
+	"* they currently do not work.\n",
+);
 
 # Create a very simple stage that performs a task and returns a
 # mesage.  The magic here is that the stage makes its own request in
@@ -8,8 +16,6 @@
 
 {
 	package SelfRequester;
-	use warnings;
-	use strict;
 	use POE::Stage qw(:base self);
 	use POE::Watcher::Delay;
 
@@ -32,12 +38,12 @@
 	# again, or the results will be close enough to make work without
 	# too much ugliness.
 
-	sub init {
+	sub init :Handler {
 		my $args = $_[1];
 
 		warn 0;
 		my $passthrough_args = delete $args->{args} || {};
-		my $auto_request :Self = POE::Request->new(
+		my $self_auto_request = POE::Request->new(
 			stage   => self,
 			method  => "set_thingy",
 			%$args,
@@ -45,37 +51,35 @@
 		);
 	}
 
-	sub set_thingy {
-		my $seconds :Arg;
+	sub set_thingy :Handler {
+		my $arg_seconds;
 		warn 1;
 
-		my $delay :Req = POE::Watcher::Delay->new(
-			seconds     => $seconds,
+		my $req_delay = POE::Watcher::Delay->new(
+			seconds     => $arg_seconds,
 			on_success  => "time_is_up",
 		);
 	}
 
-	sub time_is_up {
-		my $auto_request :Self;
+	sub time_is_up :Handler {
+		my $self_auto_request;
 		warn 2;
-		$auto_request->return(
+		$self_auto_request->return(
 			type => "done",
 		);
 
 		# Don't need to delete these as long as the request is canceled,
 		# either by calling req->return() on ->cancel().
-		#delete $self->{request};
-		#my $delay :Req = undef;
+		#$self_auto_request = undef;
+		#my $req_delay = undef;
 	}
 }
 
 {
 	package App;
-	use warnings;
-	use strict;
-	use POE::Stage qw(:base self);
+	use POE::Stage::App qw(:base self);
 
-	sub run {
+	sub on_run {
 		warn 3;
 		self->spawn_requester();
 	}
@@ -88,7 +92,7 @@
 	sub spawn_requester {
 		warn 5;
 
-		my $self_requester :Req = SelfRequester->new(
+		my $req_requester = SelfRequester->new(
 			on_done   => "do_again",
 			args      => {
 				seconds => 0.001,
@@ -98,20 +102,6 @@
 }
 
 package main;
-use warnings;
-use strict;
 
-my $app = App->new();
-my $req = POE::Request->new(
-	stage   => $app,
-	method  => "run",
-);
-
-# Trap SIGINT and make it exit gracefully.  Problems in destructor
-# timing will become apparent when warnings in them say "during global
-# destruction."
-
-$SIG{INT} = sub { warn "sigint"; exit };
-
-POE::Kernel->run();
+App->new()->run();
 exit;

@@ -1,4 +1,4 @@
-# $Id: Delay.pm 105 2006-09-23 18:12:07Z rcaputo $
+# $Id: Delay.pm 155 2007-02-15 05:09:17Z rcaputo $
 
 =head1 NAME
 
@@ -42,6 +42,9 @@ package POE::Watcher::Delay;
 use warnings;
 use strict;
 
+use POE::Watcher;
+use base qw(POE::Watcher);
+
 use Scalar::Util qw(weaken);
 use Carp qw(croak);
 use POE::Kernel;
@@ -62,7 +65,7 @@ remain active.  Destroy this object to cancel it.
 
 =cut
 
-sub new {
+sub init {
 	my ($class, %args) = @_;
 
 	my $seconds = delete $args{seconds};
@@ -133,8 +136,10 @@ report one.
 
 POE::Stage is too young for production use.  For example, its syntax
 is still changing.  You probably know what you don't like, or what you
-need that isn't included, so consider fixing or adding that.  It'll
-bring POE::Stage that much closer to a usable release.
+need that isn't included, so consider fixing or adding that, or at
+least discussing it with the people on POE's mailing list or IRC
+channel.  Your feedback and contributions will bring POE::Stage closer
+to usability.  We appreciate it.
 
 =head1 SEE ALSO
 

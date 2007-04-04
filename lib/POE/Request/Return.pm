@@ -1,4 +1,4 @@
-# $Id: Return.pm 105 2006-09-23 18:12:07Z rcaputo $
+# $Id: Return.pm 145 2006-12-25 19:09:56Z rcaputo $
 
 =head1 NAME
 
@@ -9,7 +9,8 @@ POE::Request::Return - encapsulates final replies to POE::Request messages
 	# Note, this is not a complete program.
 	# See the distribution's examples directory.
 
-	$poe_request_object->return(
+	my $req;
+	$req->return(
 		type        => "failure",
 		args        => {
 			function  => "connect",
@@ -20,11 +21,9 @@ POE::Request::Return - encapsulates final replies to POE::Request messages
 
 =head1 DESCRIPTION
 
-A POE::Request::Return message is used to send a final response to a
-request.  It is internally created and sent when a stage calls
-$self->{req}->return(...).  Part of return()'s purpose is to cancel
-the request it replies to, invalidating any further dialog associated
-with the request.
+POE::Request::Return objects are used internally to encapsulate
+messages sent by $some_request->return(...).  Returned messages end
+their transactions.
 
 =cut
 
@@ -60,15 +59,18 @@ report one.
 
 POE::Stage is too young for production use.  For example, its syntax
 is still changing.  You probably know what you don't like, or what you
-need that isn't included, so consider fixing or adding that.  It'll
-bring POE::Stage that much closer to a usable release.
+need that isn't included, so consider fixing or adding that, or at
+least discussing it with the people on POE's mailing list or IRC
+channel.  Your feedback and contributions will bring POE::Stage closer
+to usability.  We appreciate it.
 
 =head1 SEE ALSO
 
 POE::Request::Return is comprised almost entirely of
 POE::Request::Upward's features.  You should see
 L<POE::Request::Upward> for a deeper understanding of
-POE::Request::Return.
+POE::Request::Return, and L<POE::Request> for a more in-depth
+discussion of POE requests in general.
 
 =head1 AUTHORS
 

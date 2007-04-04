@@ -1,4 +1,4 @@
-# $Id: Ticker.pm 105 2006-09-23 18:12:07Z rcaputo $
+# $Id: Ticker.pm 143 2006-12-18 07:28:32Z rcaputo $
 
 =head1 NAME
 
@@ -6,19 +6,21 @@ POE::Stage::Ticker - a periodic message generator for POE::Stage
 
 =head1 SYNOPSIS
 
-	my $ticker :Req = POE::Stage::Ticker->new();
-	my $request :Req = POE::Request->new(
-		stage       => $ticker,
-		method      => "start_ticking",
-		on_tick     => "handle_tick",   # Invoke my handle_tick() method
-		args        => {
-			interval  => 10,              # every 10 seconds.
-		},
-	);
+	sub some_handler :Handler {
+		my $req_ticker = POE::Stage::Ticker->new();
+		my $req_ticker_request = POE::Request->new(
+			stage       => $req_ticker,
+			method      => "start_ticking",
+			on_tick     => "handle_tick",   # Invoke my handle_tick() method
+			args        => {
+				interval  => 10,              # every 10 seconds.
+			},
+		);
+	}
 
 	sub handle_tick {
-		my $id :Arg;
-		print "Handled tick number $id in a series.\n";
+		my $arg_id;
+		print "Handled tick number $arg_id in a series.\n";
 	}
 
 =head1 DESCRIPTION
@@ -29,11 +31,7 @@ POE::Stage::Ticker emits recurring messages at a fixed interval.
 
 package POE::Stage::Ticker;
 
-use warnings;
-use strict;
-
 use POE::Stage qw(:base self req);
-
 use POE::Watcher::Delay;
 
 =head1 PUBLIC COMMANDS
@@ -45,30 +43,30 @@ Used to request the Ticker to start ticking.  The Ticker will emit a
 
 =cut
 
-sub start_ticking {
+sub start_ticking :Handler {
 	# Since a single request can generate many ticks, keep a counter so
 	# we can tell one from another.
 
-	my $tick_id     :Req = 0;
-	my $my_interval :Req = my $interval :Arg;
+	my $req_tick_id  = 0;
+	my $req_interval = my $arg_interval;
 
 	self->set_delay();
 }
 
-sub got_watcher_tick {
+sub got_watcher_tick :Handler {
 	# Note: We have received two copies of the tick interval.  One is
 	# from start_ticking() saving it in the request-scoped part of
 	# $self.  The other is passed to us in $args, through the
 	# POE::Watcher::Delay object.  We can use either one, but I thought
 	# it would be nice for testing and illustrative purposes to make
 	# sure they both agree.
-	die unless my $my_interval :Req == my $interval :Arg;
+	die unless my $req_interval == my $arg_interval;
 
-	my $tick_id :Req;
+	my $req_tick_id;
 	req->emit(
 		type  => "tick",
 		args  => {
-			id  => ++$tick_id,
+			id  => ++$req_tick_id,
 		},
 	);
 
@@ -76,16 +74,16 @@ sub got_watcher_tick {
 	# again() method.  Meanwhile we just create a new delay object to
 	# replace the old one.
 
-	self>set_delay();
+	self->set_delay();
 }
 
-sub set_delay {
-	my $my_interval :Req;
-	my $delay :Req = POE::Watcher::Delay->new(
-		seconds     => $my_interval,
+sub set_delay :Handler {
+	my $req_interval;
+	my $req_delay = POE::Watcher::Delay->new(
+		seconds     => $req_interval,
 		on_success  => "got_watcher_tick",
 		args        => {
-			interval  => $my_interval,
+			interval  => $req_interval,
 		},
 	);
 }
@@ -110,8 +108,10 @@ report one.
 
 POE::Stage is too young for production use.  For example, its syntax
 is still changing.  You probably know what you don't like, or what you
-need that isn't included, so consider fixing or adding that.  It'll
-bring POE::Stage that much closer to a usable release.
+need that isn't included, so consider fixing or adding that, or at
+least discussing it with the people on POE's mailing list or IRC
+channel.  Your feedback and contributions will bring POE::Stage closer
+to usability.  We appreciate it.
 
 =head1 SEE ALSO
 

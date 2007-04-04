@@ -1,25 +1,18 @@
 #!perl
-# $Id: 01_basics.perl 99 2006-08-14 02:21:22Z rcaputo $
+# $Id: 01_basics.perl 146 2007-01-07 06:51:22Z rcaputo $
 
 # Simple call and return in POE::Stage.
-
-use warnings;
-use strict;
-use POE::Stage;
 
 # Define a simple class that does something and returns a value.
 
 {
 	package Helper;
-
-	use warnings;
-	use strict;
 	use POE::Stage qw(:base self req);
 
-	sub do_something {
+	sub do_something :Handler {
 		print "Helper (", self, ") is executing a request.\n";
-		req()->emit(args => { value => "EmitValue123" });
-		req()->return(args => { value => "ReturnValueXyz" });
+		req->emit(args => { value => "EmitValue123" });
+		req->return(args => { value => "ReturnValueXyz" });
 	}
 }
 
@@ -27,72 +20,68 @@ use POE::Stage;
 
 {
 	package App;
+	use POE::Stage::App qw(:base expose);
 
-	use warnings;
-	use strict;
-	use POE::Stage qw(:base);
-
-	sub call_helper {
-		my $helper :Req = Helper->new();
-		my $helper_request :Req = POE::Request->new(
-			stage     => $helper,
+	sub on_run {
+		my $req_helper = Helper->new();
+		my $req_helper_request = POE::Request->new(
+			stage     => $req_helper,
 			method    => "do_something",
 			on_return => "catch_return",
 			on_emit   => "catch_emit",
 		);
 
-		my (%hash, @array) :Req;
-		%hash = ( abc => 123, xyz => 890 );
-		@array = qw( a e i o u y );
+		my (%req_hash, @req_array);
+		%req_hash = ( abc => 123, xyz => 890 );
+		@req_array = qw( a e i o u y );
 
-		print "App: Calling $helper via $helper_request\n";
+		print "App: Calling $req_helper via $req_helper_request\n";
 
 		# This is passed back in the response context to $helper_request.
-		my $name :Req($helper_request) = "test response context";
+		expose $req_helper_request => my $hr_name;
+		$hr_name = "test response context";
 	}
 
-	sub catch_return {
-		my $value :Arg;
-		my ($helper, $helper_request, %hash, @array) :Req;
-		my $name :Rsp;
+	sub catch_return :Handler {
+		my (
+			$arg_value,
+			$req_helper, $req_helper_request, %req_hash, @req_array,
+			$rsp_name,
+		);
+
 		print(
-			"App return: return value '$value'\n",
-			"App return: $helper was called via $helper_request\n",
-			"App return: hash keys: ", join(" ", keys %hash), "\n",
-			"App return: hash values: ", join(" ", values %hash), "\n",
-			"App return: array: @array\n",
-			"App return: rsp: $name\n",
+			"App return: return value '$arg_value'\n",
+			"App return: $req_helper was called via $req_helper_request\n",
+			"App return: hash keys: ", join(" ", keys %req_hash), "\n",
+			"App return: hash values: ", join(" ", values %req_hash), "\n",
+			"App return: array: @req_array\n",
+			"App return: rsp: $rsp_name\n",
 		);
 	}
 
-	sub catch_emit {
-		my $value :Arg;
-		my ($helper, $helper_request, %hash, @array) :Req;
-		my $name :Rsp;
-		print(
-			"App emit: return value '$value'\n",
-			"App emit: $helper was called via $helper_request\n",
-			"App emit: hash keys: ", join(" ", keys %hash), "\n",
-			"App emit: hash values: ", join(" ", values %hash), "\n",
-			"App emit: array: @array\n",
-			"App emit: rsp name = $name\n",
+	sub catch_emit :Handler {
+		my (
+			$arg_value,
+			$req_helper, $req_helper_request, %req_hash, @req_array,
+			$rsp_name,
 		);
 
-		$name = "modified in catch_emit";
+		print(
+			"App emit: return value '$arg_value'\n",
+			"App emit: $req_helper was called via $req_helper_request\n",
+			"App emit: hash keys: ", join(" ", keys %req_hash), "\n",
+			"App emit: hash values: ", join(" ", values %req_hash), "\n",
+			"App emit: array: @req_array\n",
+			"App emit: rsp name = $rsp_name\n",
+		);
+
+		$rsp_name = "modified in catch_emit";
 	}
 }
 
 # Create and start the application.
 
-my $app = App->new();
-my $req = POE::Request->new(
-	stage => $app,
-	method  => "call_helper",
-);
-
-# TODO - Abstract this.
-
-POE::Kernel->run();
+App->new()->run();
 exit;
 
 __END__

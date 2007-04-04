@@ -1,64 +1,63 @@
 #!/usr/bin/perl
-# $Id: log-resolver.perl 99 2006-08-14 02:21:22Z rcaputo $
+# $Id: log-resolver.perl 147 2007-01-21 07:57:35Z rcaputo $
 
 # Resolve IP addresses in log files into their hosts, in some number
 # of parallel requests.  This example exercises the system's ability
 # to manage and track multiple consumer requests to a single producer.
 
-use warnings;
-use strict;
-
 {
 	package App;
 
-	use warnings;
-	use strict;
-
-	use POE::Stage qw(:base self);
+	use POE::Stage::App qw(:base self expose);
 	use POE::Stage::Resolver;
 
-	sub run {
+	sub on_run {
+
+		# Create a single resolver to be used multiple times.
+
+		my $req_resolver = POE::Stage::Resolver->new();
 
 		# Start a handful of initial requests.
 		for (1..5) {
 			my $next_address = read_next_address();
 			last unless defined $next_address;
 
-			self->resolve_address($next_address);
+			self->resolve_address({ addr => $next_address });
 		}
 	}
 
-	sub handle_host {
-		my ($input, $packet) :Arg;
+	sub handle_host :Handler {
+		my ($arg_input, $arg_packet);
 
-		my @answers = $packet->answer();
+		my ($req, $rsp, $rsp_itself);
+
+		my @answers = $arg_packet->answer();
 		foreach my $answer (@answers) {
 			print(
-				"Resolved: $input = type(", $answer->type(), ") data(",
+				"Resolved: $arg_input = type(", $answer->type(), ") data(",
 				$answer->rdatastr, ")\n"
 			);
 		}
 
-		# Clean up the one-time Stage.
-		#
-		# TODO - What if this were optional?  If new() were to be called
-		# in void context, the framework could hold onto the stage until
-		# it it called return() or cancel().  Then the framework frees it.
-
-		self->resolve_address(read_next_address());
+		my $next_address = read_next_address();
+		return unless defined $next_address;
+		self->resolve_address({ addr => $next_address });
 	}
 
 	# Handle some error.
-	sub handle_error {
-		my ($input, $error) :Args;
+	sub handle_error :Handler {
+		my ($arg_input, $arg_error);
 
-		print "Error: $input = $error\n";
+		print "Error: $arg_input = $arg_error\n";
 
-		self->resolve_address(read_next_address());
+		my $next_address = read_next_address();
+		last unless defined $next_address;
+
+		self->resolve_address({ addr => $next_address });
 	}
 
 	# Plain old subroutine.  Doesn't handle events.
-	sub read_next_address {
+	sub read_next_address :Handler {
 		while (<main::DATA>) {
 			chomp;
 			s/\s*\#.*$//;     # Discard comments.
@@ -69,37 +68,36 @@ use strict;
 	}
 
 	# Plain old method.  Doesn't handle events.
-	sub resolve_address {
-		my ($self, $next_address) = @_;
+	sub resolve_address :Handler {
+		my $arg_addr;
+		return unless defined $arg_addr;
 
-		my $resolver :Req;
+		my %req_subs;
 
-		unless (defined $next_address) {
-			$resolver = undef;
-			return;
-		}
-
-		# Create a self-requesting stage.
-		$resolver = POE::Stage::Resolver->new(
+		my $resolve_request = POE::Request->new(
+			stage => my $req_resolver,
+			method => "resolve",
 			on_success  => "handle_host",
 			on_error    => "handle_error",
 			args        => {
-				input     => $next_address,
+				input     => $arg_addr,
 			},
 		);
+
+		expose $resolve_request => my $moo_itself;
+		$moo_itself = $resolve_request;
+
+		$req_subs{$resolve_request} = $resolve_request;
 	}
 }
 
 # Main program.
 
-my $app = App->new();
-my $req = POE::Request->new(
-	stage    => $app,
-	method   => "run",
-);
-
-POE::Kernel->run();
+App->new()->run();
 exit;
+
+# 198.252.144.2
+# 198.175.186.5
 
 __DATA__
 141.213.238.252
@@ -111,8 +109,6 @@ __DATA__
 195.111.64.195
 195.82.114.48
 198.163.214.60
-198.175.186.5
-198.252.144.2
 198.3.160.3
 204.92.73.10
 205.210.145.2

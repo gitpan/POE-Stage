@@ -1,55 +1,52 @@
-# $Id: Resolver.pm 105 2006-09-23 18:12:07Z rcaputo $
+# $Id: Resolver.pm 147 2007-01-21 07:57:35Z rcaputo $
 
 =head1 NAME
 
-POE::Stage::Resolver - a fake non-blocking DNS resolver
+POE::Stage::Resolver - a simple non-blocking DNS resolver
 
 =head1 SYNOPSIS
 
 	# Note, this is not a complete program.
 	# See the distribution's examples directory.
 
-	my $resolver :Req = POE::Stage::Resolver->new(
-		method      => "resolve",
-		on_success  => "handle_host",
-		on_error    => "handle_error",
-		args        => {
-			input     => "thirdlobe.com",
-			type      => "A",   # A is default
-			class     => "IN",  # IN is default
-		},
-	);
+	sub some_handler :Handler {
+		my $req_resolver = POE::Stage::Resolver->new(
+			method      => "resolve",
+			on_success  => "handle_host",
+			on_error    => "handle_error",
+			args        => {
+				input     => "thirdlobe.com",
+				type      => "A",   # A is default
+				class     => "IN",  # IN is default
+			},
+		);
+	}
 
-	sub handle_host {
-		my ($self, $args) = @_;
+	sub handle_host :Handler {
+		my ($arg_input, $arg_packet);
 
-		my $input  = $args->{input};
-		my $packet = $args->{packet};
-
-		my @answers = $packet->answer();
+		my @answers = $arg_packet->answer();
 		foreach my $answer (@answers) {
 			print(
-				"Resolved: $input = type(", $answer->type(), ") data(",
+				"Resolved: $arg_input = type(", $answer->type(), ") data(",
 				$answer->rdatastr, ")\n"
 			);
 		}
 
-		my $resolver :Req = undef;
+		# Cancel the resolver by destroying it.
+		my $req_resolver = undef;
 	}
 
 =head1 DESCRIPTION
 
 POE::Stage::Resolver is a simple non-blocking DNS resolver.  For now
 it uses Net::DNS::Resolver for the bulk of its work.  It returns
-Net::DNS::Packet objects in its "success" responses.  Making heads or
-tails of them will require perusal of Net::DNS's documentation.
+Net::DNS::Packet objects in its "success" responses.  Please see the
+documentation for Net::DNS.
 
 =cut
 
 package POE::Stage::Resolver;
-
-use warnings;
-use strict;
 
 use POE::Stage qw(:base self req);
 use POE::Watcher::Delay;
@@ -67,64 +64,82 @@ Creates a POE::Stage::Resolver instance and asks it to resolve some
 INPUT into records of a given CLASS and TYPE.  CLASS and TYPE default
 to "IN" and "A", respectively.
 
-When complete, the stage will return either a "success" or an "error".
+When complete, the stage will respond with either a "success" or an
+"error" message.
 
 =cut
 
-sub init {
-	# TODO - Need an idiom to avoid direct $_[1] manipulation.
+sub resolve :Handler {
+	# Set up aspects of this request.
+	my $req_type  = my $arg_type; $req_type ||= "A";
+	my $req_class = my $arg_class; $req_class ||= "IN";
+	my $req_input = my $arg_input;
+	$req_input || croak "Resolver requires input";
 
-	# Fire off a request automatically as part of creation.
-	my $passthrough_args = delete($_[1]{args}) || {};
+	# Track pending requests in the object.
+	my $memo_key = join("\t", $req_type, $req_class, $req_input);
 
-	my $init_req :Req = POE::Request->new(
-		stage   => self,
-		method  => "resolve",
-		%{$_[1]},
-		args    => { %$passthrough_args },
+	my %self_pending;
+	if (exists $self_pending{$memo_key}) {
+		push @{$self_pending{$memo_key}}, my $req;
+		return;
+	}
+
+	$self_pending{$memo_key} = [ my $req ];
+
+	# There's only one resolver.
+	my $self_resolver ||= Net::DNS::Resolver->new();
+
+	# But it can generate many sockets.
+	my $req_socket = $self_resolver->bgsend(
+		$req_input,
+		$req_type,
+		$req_class,
 	);
 
-	my $resolver :Self = Net::DNS::Resolver->new();
-}
-
-sub resolve {
-	my $my_type :Self = my $type :Arg; $my_type ||= "A";
-	my $my_class :Self = my $class :Arg; $my_class ||= "IN";
-	my $my_input :Self = my $input :Arg;
-	$my_input || croak "Resolver requires input";
-
-	my $resolver :Self;
-	my $socket :Self = $resolver->bgsend(
-		$my_input,
-		$my_type,
-		$my_class,
-	);
-
-	my $wait_for_it :Self = POE::Watcher::Input->new(
-		handle    => $socket,
+	# Wait for input.
+	my $req_wait_for_it = POE::Watcher::Input->new(
+		handle    => $req_socket,
 		on_input  => "net_dns_ready_to_read",
 	);
 }
 
-sub net_dns_ready_to_read {
+sub net_dns_ready_to_read :Handler {
+	my ($req_socket, $self_resolver);
+	my $packet = $self_resolver->bgread($req_socket);
 
-	my ($socket, $resolver) :Self;
-	my $packet = $resolver->bgread($socket);
+	my ($req_type, $req_class, $req_input);
+	my $memo_key = join("\t", $req_type, $req_class, $req_input);
 
-	my $my_input :Self;
+	my %self_pending;
+	my $requests = delete $self_pending{$memo_key};
+
+	unless (defined $requests) {
+		$self_resolver = undef unless keys %self_pending;
+		$req_socket = undef;
+		my $req_wait_for_it = undef;
+		return;
+	}
+
 	unless (defined $packet) {
-		req->return(
-			type    => "error",
-			args    => {
-				input => $my_input,
-				error => $resolver->errorstring(),
-			}
-		);
+		foreach my $pending (@$requests) {
+			$pending->return(
+				type    => "error",
+				args    => {
+					input => $req_input,
+					error => $self_resolver->errorstring(),
+				}
+			);
+		}
+
+		$self_resolver = undef unless keys %self_pending;
+		$req_socket = undef;
+		my $req_wait_for_it = undef;
 		return;
 	}
 
 	unless (defined $packet->answerfrom) {
-		my $answerfrom = getpeername($socket);
+		my $answerfrom = getpeername($req_socket);
 		if (defined $answerfrom) {
 			$answerfrom = (unpack_sockaddr_in($answerfrom))[1];
 			$answerfrom = inet_ntoa($answerfrom);
@@ -132,24 +147,20 @@ sub net_dns_ready_to_read {
 		}
 	}
 
-	req->return(
-		type      => "success",
-		args      => {
-			input   => $my_input,
-			packet  => $packet,
-		},
-	);
+	foreach my $pending (@$requests) {
+		$pending->return(
+			type      => "success",
+			args      => {
+				input   => $req_input,
+				packet  => $packet,
+			},
+		);
+	}
 
-#	# Dump things when we should be done with them.  Originally used to
-#	# find a memory leak in self-requesting stages.
-#	use Data::Dumper;
-#
-#	warn "*********** self :\n";
-#	warn Dumper($self), "\n";
-#	warn Dumper(tied(%{$self->{init_req}}));
-#
-#	delete $self->{init_req};
-#	delete $self->{wait_for_it};
+	$self_resolver = undef unless keys %self_pending;
+	$req_socket = undef;
+		my $req_wait_for_it = undef;
+	return;
 }
 
 1;
@@ -176,10 +187,13 @@ See L<http://thirdlobe.com/projects/poe-stage/report/1> for known
 issues.  See L<http://thirdlobe.com/projects/poe-stage/newticket> to
 report one.
 
+
 POE::Stage is too young for production use.  For example, its syntax
 is still changing.  You probably know what you don't like, or what you
-need that isn't included, so consider fixing or adding that.  It'll
-bring POE::Stage that much closer to a usable release.
+need that isn't included, so consider fixing or adding that, or at
+least discussing it with the people on POE's mailing list or IRC
+channel.  Your feedback and contributions will bring POE::Stage closer
+to usability.  We appreciate it.
 
 =head1 SEE ALSO
 

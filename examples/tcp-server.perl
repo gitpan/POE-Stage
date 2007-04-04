@@ -1,17 +1,12 @@
 #!/usr/bin/perl
-# $Id: tcp-server.perl 99 2006-08-14 02:21:22Z rcaputo $
+# $Id: tcp-server.perl 155 2007-02-15 05:09:17Z rcaputo $
 
 # Test out the syntax for a TCP listener stage.
 
-use warnings;
-use strict;
 use lib qw(./lib ../lib);
 
 {
 	package POE::Stage::Listener;
-
-	use warnings;
-	use strict;
 
 	use POE::Stage qw(:base self req);
 
@@ -29,10 +24,10 @@ use lib qw(./lib ../lib);
 	# $self->{req} or what.  Very confusing.  Users will also have this
 	# problem.  Hell, if *I* can't figure it out, then it sucks.
 
-	sub init {
+	sub init :Handler {
 		my $args = $_[1];
-		my $init_request :Self;
-		my ($socket, $listen_queue) :Arg;
+		my $self_init_request;
+		my ($arg_socket, $arg_listen_queue);
 
 		# TODO - This idiom happens enough that we should abstract it.
 		my $passthrough_args = delete($args->{args}) || { };
@@ -41,18 +36,18 @@ use lib qw(./lib ../lib);
 		# them into a request's args.  It's a butt-ugly, repetitive thing
 		# to do.  Find a better way.
 
-		die "POE::Stage::Listener requires a socket" unless $socket;
+		die "POE::Stage::Listener requires a socket" unless $arg_socket;
 
-		$listen_queue ||= SOMAXCONN;
+		$arg_listen_queue ||= SOMAXCONN;
 
-		$init_request = POE::Request->new(
+		$self_init_request = POE::Request->new(
 			stage   => self,
 			method  => "listen",
 			%$args,
 			args    => {
 				%$passthrough_args,
-				socket => $socket,
-				listen_queue => $listen_queue,
+				socket => $arg_socket,
+				listen_queue => $arg_listen_queue,
 			},
 		);
 
@@ -62,25 +57,25 @@ use lib qw(./lib ../lib);
 
 	# Set up the listener.
 
-	sub listen {
-		my ($socket, $listen_queue) :Arg;
+	sub listen :Handler {
+		my ($arg_socket, $arg_listen_queue);
 
-		my $req_socket :Req = $socket;
-		my $req_listen_queue = $listen_queue;
+		my $req_socket = $arg_socket;
+		my $req_listen_queue = $arg_listen_queue;
 
 		# TODO - Pass in parameters for listen.  Whee.
-		listen($socket, $listen_queue) or die "listen: $!";
+		listen($arg_socket, $arg_listen_queue) or die "listen: $!";
 
-		my $input_watcher :Req = POE::Watcher::Input->new(
-			handle    => $socket,
+		my $req_input_watcher = POE::Watcher::Input->new(
+			handle    => $arg_socket,
 			on_input  => "accept_connection",
 		);
 	}
 
 	# Ready to accept from the socket.  Do it.
 
-	sub accept_connection {
-		my $new_socket = (my $req_socket :Req)->accept();
+	sub accept_connection :Handler {
+		my $new_socket = (my $req_socket)->accept();
 		warn "accept error $!" unless $new_socket;
 		req->emit( type => "accept", socket => $new_socket );
 	}
@@ -91,63 +86,63 @@ use lib qw(./lib ../lib);
 {
 	package POE::Stage::EchoSession;
 
-	use warnings;
-	use strict;
-
 	use POE::Stage qw(:base self req);
 
-	sub init {
+	sub init :Handler {
 		my $args = $_[1];
-		my $init_request :Self;
-		my $socket :Arg;
+		my $self_init_request;
+		my $arg_socket;
 
 		my $passthrough_args = delete($args->{args}) || { };
 
-		$init_request = POE::Request->new(
+		$self_init_request = POE::Request->new(
 			stage => self,
 			method => "interact",
 			%$args,
 			args => {
-				socket => $socket,
+				socket => $arg_socket,
 			}
 		);
 	}
 
-	sub interact {
-		my $socket :Arg;
+	sub interact :Handler {
+		my $arg_socket;
 
-		use Data::Dumper;
-		warn Dumper($_[1]);
-
-		my $input_watcher :Req = POE::Watcher::Input->new(
-			handle    => $socket,
+		my $req_input_watcher = POE::Watcher::Input->new(
+			handle    => $arg_socket,
 			on_input  => "process_input",
 		);
 	}
 
-	sub process_input {
-		my $socket :Arg;
+	sub process_input :Handler {
+		my $arg_handle;
 
-		my $ret = sysread($socket, my $buf = "", 65536);
+		my $ret = sysread($arg_handle, my $buf = "", 65536);
 
 		use POSIX qw(EAGAIN EWOULDBLOCK);
 
+		my $req_input_watcher;
 		unless ($ret) {
 			return if $! == EAGAIN or $! == EWOULDBLOCK;
-			warn "read error: $!";
-			my $input_watcher :Req = undef;
+			if ($!) {
+				warn "read error: $!";
+			}
+			else {
+				warn "remote closed connection";
+			}
+			$req_input_watcher = undef;
 			return;
 		}
 
 		my ($offset, $rest) = (0, $ret);
 		while ($rest) {
-			my $wrote = syswrite($socket, $buf, $rest, $offset);
+			my $wrote = syswrite($arg_handle, $buf, $rest, $offset);
 
 			# Nasty busy loop for rapid prototyping.
 			unless ($wrote) {
 				next if $! == EAGAIN or $! == EWOULDBLOCK;
 				warn "write error: $!";
-				my $input_watcher :Req = undef;
+				$req_input_watcher = undef;
 				return;
 			}
 
@@ -155,7 +150,6 @@ use lib qw(./lib ../lib);
 			$offset += $wrote;
 		}
 	}
-
 }
 
 ###
@@ -163,37 +157,45 @@ use lib qw(./lib ../lib);
 {
 	package POE::Stage::EchoServer;
 
-	use warnings;
-	use strict;
-
 	use Scalar::Util qw(weaken);
 	use base qw(POE::Stage::Listener);
 
-	sub on_my_accept {
-		my $socket :Arg;
+	sub on_my_accept :Handler {
+		my $arg_socket;
 
 		# Do we need to save this reference?  Self-requesting stages
 		# should do something magical here.
-		my %sockets :Req;
-		$sockets{$socket} = POE::Stage::EchoSession->new(
-			socket => $socket,
+		my %req_sockets;
+		$req_sockets{$arg_socket} = POE::Stage::EchoSession->new(
+			socket => $arg_socket,
 		);
-		weaken $sockets{$socket};
+		weaken $req_sockets{$arg_socket};
 	}
 }
 
-my $app = POE::Stage::EchoServer->new(
-	socket => IO::Socket::INET->new(
-		LocalAddr => "127.0.0.1",
-		LocalPort => 31415,
-		ReuseAddr => "yes",
-	),
-);
+# The application starts an echo server based on parameters given to
+# it.
 
-sub moo {
+{
+	package App;
+	use POE::Stage::App qw(:base);
+	sub on_run {
+		my $req_server = POE::Stage::EchoServer->new(
+			socket => IO::Socket::INET->new(
+				LocalAddr => my $arg_bind_addr,
+				LocalPort => my $arg_bind_port,
+				ReuseAddr => "yes",
+			),
+		);
+
+		print "To connect to this echo server: telnet localhost 31415\n";
+	}
 }
 
-POE::Kernel->run();
+App->new()->run(
+	bind_addr => "127.0.0.1",
+	bind_port => 31415,
+);
 exit;
 
 __END__

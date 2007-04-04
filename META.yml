@@ -1,19 +1,21 @@
 --- #YAML:1.0
 name:                POE-Stage
-version:             0.01_00
+version:             0.02_00
 abstract:            a prototype of a successor to POE::Component
-license:             unknown
-generated_by:        ExtUtils::MakeMaker version 6.30_01
-author:              Rocco Caputo <rcaputo@cpan.org>
+license:             perl
+generated_by:        ExtUtils::MakeMaker version 6.31
 distribution_type:   module
 requires:     
     Attribute::Handlers:           0.78
     Devel::LexAlias:               0.04
+    Lexical::Persistence:          0.95
     Net::DNS:                      0.53
     PadWalker:                     1
     POE:                           0.3502
     Scalar::Util:                  1.18
     Test::More:                    0
 meta-spec:
-    url: <http://module-build.sourceforge.net/META-spec-new.html>;
-    version: 1.1
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - Rocco Caputo <rcaputo@cpan.org>
