@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                POE-Stage
-version:             0.02_00
+version:             0.03
 abstract:            a prototype of a successor to POE::Component
 license:             perl
 generated_by:        ExtUtils::MakeMaker version 6.31

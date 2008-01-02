@@ -3,6 +3,7 @@ MANIFEST
 Makefile.PL
 README
 examples/01_basics.perl
+examples/candygram.perl
 examples/log-resolver.perl
 examples/many-responses.perl
 examples/ping-pong.perl
@@ -10,6 +11,7 @@ examples/self-requesting-stage.perl
 examples/tcp-server.perl
 examples/udp-peer.perl
 examples/wheel-run.perl
+examples/wide-finder.perl
 lib/POE/Callback.pm
 lib/POE/Request.pm
 lib/POE/Request/Emit.pm
@@ -26,4 +28,5 @@ lib/POE/Watcher.pm
 lib/POE/Watcher/Delay.pm
 lib/POE/Watcher/Input.pm
 t/01_all_call_types.t
+t/10_callback.t
 META.yml                                 Module meta-data (added by MakeMaker)

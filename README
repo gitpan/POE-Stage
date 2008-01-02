@@ -361,11 +361,9 @@ BBUUGGSS
        issues.  See <http://thirdlobe.com/projects/poe−stage/newticket> to
        report a problem.
 
-       POE::Stage is not ready for production.  You can safely assume that it
-       won’t be as long as the BUGS section says so.  For example,
-       POE::Stage’s syntax is changing rapidly and in ways that aren’t
-       necessarily backwards compatible.  Please let the author know how he’s
-       doing.  Your feedback is really helpful.
+       POE::Stage is not ready for production.  Check back here early and
+       often to find out when it will be.  Please contact the author if you
+       would like to see POE::Stage production‐ready sooner.
 
 SSEEEE AALLSSOO
        POE::Stage is the base class for message‐driven objects.  POE::Request
@@ -387,4 +385,4 @@ LLIICCEENNSSEE
 
 
 
-perl v5.8.8                       2007‐04‐04                     POE::Stage(3)
+perl v5.8.8                       2008‐01‐02                     POE::Stage(3)
