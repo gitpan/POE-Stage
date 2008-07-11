@@ -1,4 +1,4 @@
-# $Id: Stage.pm 168 2008-01-02 20:53:37Z rcaputo $
+# $Id: Stage.pm 170 2008-07-11 05:30:16Z rcaputo $
 
 =head1 NAME
 
@@ -66,7 +66,7 @@ use warnings;
 use strict;
 
 use vars qw($VERSION);
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 use POE::Session;
 
