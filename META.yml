@@ -1,11 +1,11 @@
 --- #YAML:1.0
 name:                POE-Stage
-version:             0.04
+version:             0.05
 abstract:            a prototype of a successor to POE::Component
 license:             perl
 author:              
     - Rocco Caputo <rcaputo@cpan.org>
-generated_by:        ExtUtils::MakeMaker version 6.44
+generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
     Attribute::Handlers:           0.78

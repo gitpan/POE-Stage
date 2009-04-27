@@ -1,4 +1,4 @@
-# $Id: TiedAttributes.pm 148 2007-01-25 06:59:23Z rcaputo $
+# $Id: TiedAttributes.pm 182 2009-04-27 07:21:50Z rcaputo $
 
 =head1 NAME
 
@@ -154,6 +154,7 @@ sub FIRSTKEY  { croak "firstkey directly from a stage"; }
 sub NEXTKEY   { croak "nextkey directly from a stage";  }
 sub EXISTS    { croak "exists directly from a stage";   }
 sub DELETE    { croak "delete directly from a stage";   }
+sub DESTROY   { undef }  # Do nothing; somehow avoids a Perl coredump.
 
 ### Helper for :Self members.
 

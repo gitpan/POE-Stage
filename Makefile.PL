@@ -1,4 +1,4 @@
-# $Id: Makefile.PL 135 2006-11-18 23:48:36Z rcaputo $
+# $Id: Makefile.PL 173 2008-12-15 16:20:18Z rcaputo $
 
 use ExtUtils::MakeMaker;
 
@@ -27,7 +27,7 @@ WriteMakefile(
     SUFFIX     => 'gz',
     PREOP      => (
       'svn-log.perl | tee ./$(DISTNAME)-$(VERSION)/CHANGES > ./CHANGES;' .
-      'perldoc lib/POE/Stage.pm > README'
+      'LANG=C perldoc lib/POE/Stage.pm > README'
     ),
   },
 );

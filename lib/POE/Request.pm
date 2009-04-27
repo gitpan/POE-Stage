@@ -1,4 +1,4 @@
-# $Id: Request.pm 156 2007-02-28 07:30:08Z rcaputo $
+# $Id: Request.pm 172 2008-12-05 07:57:10Z rcaputo $
 
 =head1 NAME
 
@@ -324,6 +324,15 @@ sub _send_to_target {
 	$poe_kernel->post(
 		$self->[REQ_TARGET_STAGE]->_get_session_id(), "stage_request", $self
 	);
+}
+
+sub pass_to {
+	my ($self, $arg) = @_;
+
+	my $sub_arg = delete $arg->{args} || { };
+	my $method = delete $arg->{method} or croak "method required";
+
+	$self->deliver($method, $sub_arg);
 }
 
 =head1 PUBLIC METHODS

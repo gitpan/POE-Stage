@@ -1,4 +1,4 @@
-# $Id: Callback.pm 167 2007-10-15 02:26:31Z rcaputo $
+# $Id: Callback.pm 172 2008-12-05 07:57:10Z rcaputo $
 
 =head1 NAME
 
@@ -234,7 +234,7 @@ sub new {
 				@vivify,
 				q{    $tied_self->_request_context_store(} .
 				qq{    \$rsp_id, '$member_name', \$member_ref);},
-				q(  }),
+				qq(  \}),
 				# Alias the member.
 				qq{  lexalias(\$code, '$var_name', \$member_ref);}
 			);
@@ -253,7 +253,7 @@ sub new {
 			push @vars, (
 				@vivify,
 				qq{    \$tied_self->_self_store('$member_name', \$member_ref);},
-				q(  }),
+				qq(  \}),
 				# Alias the member.
 				qq{  lexalias(\$code, '$var_name', \$member_ref);}
 			);

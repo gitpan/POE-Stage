@@ -1,65 +1,74 @@
 =================================
+2009-04-27T07:22:26.093569Z v0_05
+=================================
+
+  2009-04-27 07:21:50 (r182) by rcaputo
+  examples/moostage.perl D; lib/POE/Stage/TiedAttributes.pm M;
+  lib/POE/Stage.pm M
+
+    Remove moostage.perl from examples. It lives in the lab for now. Work
+    around the Perl segfault plaguing 0.04. 
+
+  2009-04-27 07:07:30 (r181) by rcaputo; lab/moosestage_actors.perl M
+
+    Fix a typo.
+
+  2008-12-20 07:18:43 (r180) by rcaputo; lab/moostage.perl A
+
+    Borrow liberally from moosestage_actor.perl, but not quite assimilate
+    the actors themselves. I'm not sure it's good to make actors 1:1 with
+    these objects.
+    
+    Get my MooseX::AttributeHelpers on. They're kinda nifty. 
+
+  2008-12-20 07:15:17 (r179) by rcaputo; lab/moosestage_actors.perl M
+
+    Minor changes. Add a bit of vim configuration so I don't blow the
+    author's style. Make actor IDs a bit more unique. 
+
+  2008-12-20 05:30:40 (r178) by perigrin; lab/moosestage_actors.perl M
+
+    add optimization for collecting messages
+
+  2008-12-20 03:22:43 (r177) by perigrin; lab/moosestage_actors.perl M
+
+    move actors up into the namespace
+
+  2008-12-20 03:03:13 (r176) by rcaputo; examples/moostage.perl M
+
+    Flesh out the dispatcher with some ideas that might find their way
+    back into POE::Loop. 
+
+  2008-12-20 02:56:44 (r175) by perigrin; lab/moosestage_actors.perl A
+
+    refactor moosestage into an actor model
+
+  2008-12-15 22:39:06 (r174) by rcaputo; examples/moostage.perl A
+
+    Add for tracking. 
+
+  2008-12-15 16:20:18 (r173) by rcaputo; Makefile.PL M
+
+    Keep UTF8 out of the README, because that messes up the SYNOPSIS.
+
+  2008-12-05 07:57:10 (r172) by rcaputo
+  examples/self-requesting-stage.perl M; lib/POE/Callback.pm M;
+  examples/tut-010-app.perl A; lib/POE/Stage.pm M; lib/POE/Request.pm M
+
+    Get self-requesting-stage.perl working again.
+    
+    Implement pass_to() but do not document it. The docs are a bit
+    outdated anyway, and pass_to() may not be final.
+    
+    Create a basic tutorial around the "hello, world!" synopsis example. 
+
+=================================
 2008-07-11T05:30:34.862921Z v0_04
 =================================
 
   2008-07-11 05:30:16 (r170) by rcaputo; MANIFEST M; lib/POE/Stage.pm M
 
     Many things were missing from the MANIFEST. 
-
-=================================
-2008-01-02T20:53:57.405910Z v0_03
-=================================
-
-  2008-01-02 20:53:37 (r168) by rcaputo; lib/POE/Stage.pm M
-
-    sproingle and mst (irc.perl.org #moose) made the point that the
-    developer version number makes this harder for average people to find
-    and play with, which may be hindering the project's adoption. This
-    revision removes the underscore and documents the project's
-    not-ready-for-prime-time nature. 
-
-  2007-10-15 02:26:31 (r167) by rcaputo; lib/POE/Callback.pm M
-
-    Skip the callback leak warning if the leaked callback is stored in
-    the symbol table. Symbol tables are destroyed after END, so it'll
-    assume callbacks in the symbol table aren't leaks. 
-
-  2007-10-15 02:00:23 (r166) by rcaputo
-  MANIFEST M; examples/wide-finder.perl A
-
-    On Chris Prather's prompting, implement a version of his wide-finder
-    example. 
-
-  2007-10-15 01:21:39 (r165) by rcaputo; examples/candygram.perl M
-
-    Oops. Remove Chris Prather's original code. 
-
-  2007-10-15 01:20:35 (r164) by rcaputo
-  examples/candygram.perl A; MANIFEST M
-
-    Add candygram.perl example. 
-
-  2007-10-15 01:02:54 (r163) by rcaputo
-  lib/POE/Callback.pm M; MANIFEST M
-
-    Forgot to alias $self, $req and $rsp. Also forgot to add Philip
-    Gwyn's tests to the MANIFEST. 
-
-  2007-10-14 22:06:18 (r162) by rcaputo
-  lib/POE/Callback.pm M; t/10_callback.t A
-
-    Applied Philip Gwyn's patch (plus some tightening up) to generate
-    optimal lexical magic for POE::Callback objects. Resolves rt.cpan.org
-    #29975. 
-
-  2007-07-11 08:02:55 (r161) by rcaputo; NOTES.CPS M
-
-    Second revision.
-
-  2007-07-10 09:20:41 (r160) by rcaputo; NOTES.CPS A
-
-    Initial add of a rough outline for an article or talk explaining
-    POE::Stage as a continuation-passing system. 
 
 ==============
 End of Excerpt
