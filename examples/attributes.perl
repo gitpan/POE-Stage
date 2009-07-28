@@ -1,5 +1,5 @@
 #!perl
-# $Id: attributes.perl 146 2007-01-07 06:51:22Z rcaputo $
+# $Id: attributes.perl 200 2009-07-27 05:01:45Z rcaputo $
 
 # Show how lexical aliasing works in subs with the :Handler attribute.
 # Sample run output is after __END__.
@@ -26,6 +26,8 @@ exit;
 	# don't want to declare $self, $req, or $rsp.
 
 	use POE::Stage::App qw(:base self req expose);
+
+	sub on_init { undef }
 
 	sub on_run {
 

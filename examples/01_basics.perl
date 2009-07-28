@@ -1,5 +1,5 @@
 #!perl
-# $Id: 01_basics.perl 146 2007-01-07 06:51:22Z rcaputo $
+# $Id: 01_basics.perl 200 2009-07-27 05:01:45Z rcaputo $
 
 # Simple call and return in POE::Stage.
 
@@ -8,6 +8,8 @@
 {
 	package Helper;
 	use POE::Stage qw(:base self req);
+
+	sub on_init { undef }
 
 	sub do_something :Handler {
 		print "Helper (", self, ") is executing a request.\n";
@@ -21,6 +23,8 @@
 {
 	package App;
 	use POE::Stage::App qw(:base expose);
+
+	sub on_init { undef }
 
 	sub on_run {
 		my $req_helper = Helper->new();

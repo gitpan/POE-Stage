@@ -357,13 +357,18 @@ HHAANNDDLLEERR NNAAMMIINNGG CCOONNVVEENNTTIIOONNSS
        together conceptually.
 
 BBUUGGSS
-       See <http://thirdlobe.com/projects/poe-stage/report/1> for known
-       issues.  See <http://thirdlobe.com/projects/poe-stage/newticket> to
-       report a problem.
-
        POE::Stage is not ready for production.  Check back here early and
        often to find out when it will be.  Please contact the author if you
        would like to see POE::Stage production-ready sooner.
+
+BBUUGG TTRRAACCKKEERR
+       https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=POE-Stage
+
+RREEPPOOSSIITTOORRYY
+       http://thirdlobe.com/svn/poe-stage/
+
+OOTTHHEERR RREESSOOUURRCCEESS
+       http://search.cpan.org/dist/POE-Stage/
 
 SSEEEE AALLSSOO
        POE::Stage is the base class for message-driven objects.  POE::Request
@@ -376,13 +381,13 @@ SSEEEE AALLSSOO
        Driven Architecture.  It's Java, though.
 
 AAUUTTHHOORRSS
-       Rocco Caputo <rcaputo@cpan.org>.
+       Rocco Caputo.
 
 LLIICCEENNSSEE
-       POE::Stage is Copyright 2005-2006 by Rocco Caputo.  All rights are
+       POE::Stage is Copyright 2005-2009 by Rocco Caputo.  All rights are
        reserved.  You may use, modify, and/or distribute this module under the
        same terms as Perl itself.
 
 
 
-perl v5.10.0                      2009-04-27                     POE::Stage(3)
+perl v5.10.0                      2009-07-28                     POE::Stage(3)

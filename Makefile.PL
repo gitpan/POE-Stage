@@ -1,4 +1,4 @@
-# $Id: Makefile.PL 173 2008-12-15 16:20:18Z rcaputo $
+# $Id: Makefile.PL 201 2009-07-28 06:39:31Z rcaputo $
 
 use ExtUtils::MakeMaker;
 
@@ -17,10 +17,17 @@ WriteMakefile(
     'Net::DNS'              => 0.53,
     'PadWalker'             => 1.0,
     'Scalar::Util'          => 1.18,
-    'POE'                   => 0.3502,
+    'POE'                   => 1.007,
     'Test::More'            => 0,
     'Devel::LexAlias'       => 0.04,
 		'Lexical::Persistence'  => 0.95, # Currently unused.
+		'Hash::Util::FieldHash' => 1.03,
+  },
+  META_ADD     => {
+    resources  => {
+      license    => 'http://dev.perl.org/licenses/',
+      repository => 'http://thirdlobe.com/svn/poe-stage/trunk'
+    },
   },
   dist         => {
     COMPRESS   => 'gzip -9f',

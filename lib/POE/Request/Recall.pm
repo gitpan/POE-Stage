@@ -1,4 +1,4 @@
-# $Id: Recall.pm 136 2006-11-18 23:49:30Z rcaputo $
+# $Id: Recall.pm 184 2009-06-11 06:44:27Z rcaputo $
 
 =head1 NAME
 
@@ -98,8 +98,7 @@ sub new {
 	confess "should always have a current request" unless $current_request;
 
 	# Current RSP is a POE::Request::Emit.
-	my $tied_target = tied(%{$current_request->[REQ_TARGET_STAGE]});
-	my $current_rsp = $tied_target->_get_response();
+	my $current_rsp = $current_request->[REQ_TARGET_STAGE]->_get_response();
 	confess "should always have a current rsp" unless $current_rsp;
 
 	# Recall's parent is RSP's delivery REQ.
